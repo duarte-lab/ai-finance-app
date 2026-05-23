@@ -1,0 +1,51 @@
+using System.Net;
+using System.Net.Http.Json;
+using Application.Accounts.DTOs;
+using Xunit;
+
+namespace API.IntegrationTests;
+
+public class AccountsEndpointsTests : IClassFixture<CustomWebApplicationFactory>
+{
+    private readonly HttpClient _client;
+
+    public AccountsEndpointsTests(CustomWebApplicationFactory factory)
+    {
+        _client = factory.CreateApiClient();
+    }
+
+    [Fact]
+    public async Task CreateAccount_ThenMarkAsPaid_ShouldReturnPaidAccount()
+    {
+        var createRequest = new CreateAccountRequest("Rent", 1500m, new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc));
+
+        var createResponse = await _client.PostAsJsonAsync("/api/accounts", createRequest);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+        Assert.False(created!.Paid);
+
+        var payResponse = await _client.PatchAsync($"/api/accounts/{created.Id}/pay", null);
+        Assert.Equal(HttpStatusCode.OK, payResponse.StatusCode);
+
+        var paid = await payResponse.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(paid);
+        Assert.True(paid!.Paid);
+    }
+
+    [Fact]
+    public async Task GetAccounts_FilterByMonth_ShouldReturnOnlyMatchingMonth()
+    {
+        await _client.PostAsJsonAsync("/api/accounts", new CreateAccountRequest("Internet", 120m, new DateTime(2026, 11, 3, 0, 0, 0, DateTimeKind.Utc)));
+        await _client.PostAsJsonAsync("/api/accounts", new CreateAccountRequest("Gym", 80m, new DateTime(2026, 12, 3, 0, 0, 0, DateTimeKind.Utc)));
+
+        var response = await _client.GetAsync("/api/accounts?year=2026&month=11");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var items = await response.Content.ReadFromJsonAsync<List<AccountResponse>>();
+        Assert.NotNull(items);
+        Assert.Single(items!);
+        Assert.Equal("Internet", items[0].Name);
+    }
+}

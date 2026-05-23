@@ -1,0 +1,12 @@
+# .NET build artifacts
+**/bin/
+**/obj/
+
+# User and IDE files
+**/*.user
+**/*.suo
+.vscode/
+.idea/
+
+# Logs
+*.log
