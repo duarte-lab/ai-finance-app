@@ -6,6 +6,10 @@ describe("Home", () => {
     render(<Home />);
 
     expect(
+      screen.getByRole("link", { name: /fechamento mensal/i }),
+    ).toHaveAttribute("href", "/closing");
+
+    expect(
       screen.getByRole("link", { name: /dashboard financeiro/i }),
     ).toHaveAttribute("href", "/dashboard");
 

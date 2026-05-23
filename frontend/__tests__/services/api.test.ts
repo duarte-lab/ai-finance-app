@@ -1,4 +1,5 @@
 import {
+  createMonthlyClosing,
   createAccount,
   getAccounts,
   getDashboardSummary,
@@ -104,6 +105,37 @@ describe("services/api", () => {
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/dashboard/summary?year=2026&month=5"),
       { cache: "no-store" },
+    );
+  });
+
+  it("createMonthlyClosing should call closing endpoint", async () => {
+    const payload = {
+      id: "closing-1",
+      year: 2026,
+      month: 5,
+      totalAmount: 1500,
+      amountPerPerson: 750,
+      accountCount: 2,
+      participantCount: 2,
+      closedAtUtc: "2026-05-25T00:00:00Z",
+    };
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => payload,
+    });
+
+    const result = await createMonthlyClosing({
+      year: 2026,
+      month: 5,
+      accountIds: ["a1", "a2"],
+      participants: ["Ana", "Bruno"],
+    });
+
+    expect(result).toEqual(payload);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/closing"),
+      expect.objectContaining({ method: "POST" }),
     );
   });
 });

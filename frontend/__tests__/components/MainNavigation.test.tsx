@@ -24,5 +24,10 @@ describe("MainNavigation", () => {
       "href",
       "/dashboard",
     );
+
+    expect(screen.getByRole("link", { name: /fechamento/i })).toHaveAttribute(
+      "href",
+      "/closing",
+    );
   });
 });

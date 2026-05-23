@@ -21,9 +21,20 @@ export const headerMenuItems: MenuItem[] = [
     description: "Gestao de contas domesticas",
     href: "/accounts",
   },
+  {
+    title: "Fechamento",
+    description: "Fechamento mensal e divisao de despesas",
+    href: "/closing",
+  },
 ];
 
 export const homeFeatureMenuItems: MenuItem[] = [
+  {
+    title: "Fechamento mensal",
+    description: "Selecione contas pendentes e calcule valor por pessoa",
+    href: "/closing",
+    badge: "Novo",
+  },
   {
     title: "Dashboard financeiro",
     description: "Acompanhe total do mes, pagos e pendentes",

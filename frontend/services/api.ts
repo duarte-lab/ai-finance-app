@@ -38,6 +38,24 @@ export interface DashboardSummary {
   chart: DashboardCategoryPoint[];
 }
 
+export interface CreateMonthlyClosingRequest {
+  year: number;
+  month: number;
+  accountIds: string[];
+  participants: string[];
+}
+
+export interface MonthlyClosingResult {
+  id: string;
+  year: number;
+  month: number;
+  totalAmount: number;
+  amountPerPerson: number;
+  accountCount: number;
+  participantCount: number;
+  closedAtUtc: string;
+}
+
 interface GetAccountsFilter {
   year?: number;
   month?: number;
@@ -107,4 +125,20 @@ export async function getDashboardSummary(
   }
 
   return (await res.json()) as DashboardSummary;
+}
+
+export async function createMonthlyClosing(
+  request: CreateMonthlyClosingRequest,
+): Promise<MonthlyClosingResult> {
+  const res = await fetch(`${getApiBaseUrl()}/closing`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to create monthly closing: ${res.status}`);
+  }
+
+  return (await res.json()) as MonthlyClosingResult;
 }
