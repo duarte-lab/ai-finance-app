@@ -1,6 +1,7 @@
 using System.Text;
 using Application.Accounts.Interfaces;
 using Application.Accounts.UseCases;
+using Application.Dashboard.UseCases;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Microsoft.IdentityModel.Tokens;
@@ -30,6 +31,7 @@ builder.Services.AddScoped<CreateAccountUseCase>();
 builder.Services.AddScoped<UpdateAccountUseCase>();
 builder.Services.AddScoped<DeleteAccountUseCase>();
 builder.Services.AddScoped<MarkAccountAsPaidUseCase>();
+builder.Services.AddScoped<GetDashboardSummaryUseCase>();
 
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
