@@ -12,6 +12,11 @@ export const headerMenuItems: MenuItem[] = [
     href: "/",
   },
   {
+    title: "Dashboard",
+    description: "Visao geral financeira do mes",
+    href: "/dashboard",
+  },
+  {
     title: "Contas",
     description: "Gestao de contas domesticas",
     href: "/accounts",
@@ -19,6 +24,12 @@ export const headerMenuItems: MenuItem[] = [
 ];
 
 export const homeFeatureMenuItems: MenuItem[] = [
+  {
+    title: "Dashboard financeiro",
+    description: "Acompanhe total do mes, pagos e pendentes",
+    href: "/dashboard",
+    badge: "Novo",
+  },
   {
     title: "Visao geral de contas",
     description: "Lista todas as contas do mes atual",

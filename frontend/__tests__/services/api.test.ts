@@ -1,4 +1,9 @@
-import { createAccount, getAccounts, markAccountAsPaid } from "@/services/api";
+import {
+  createAccount,
+  getAccounts,
+  getDashboardSummary,
+  markAccountAsPaid,
+} from "@/services/api";
 
 describe("services/api", () => {
   const originalFetch = global.fetch;
@@ -69,6 +74,36 @@ describe("services/api", () => {
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/accounts"),
       expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("getDashboardSummary should call dashboard endpoint with year and month", async () => {
+    const payload = {
+      year: 2026,
+      month: 5,
+      totalAmount: 1600,
+      paidAmount: 1450,
+      pendingAmount: 150,
+      totalCount: 3,
+      paidCount: 2,
+      pendingCount: 1,
+      chart: [
+        { label: "Paid", amount: 1450, count: 2 },
+        { label: "Pending", amount: 150, count: 1 },
+      ],
+    };
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => payload,
+    });
+
+    const result = await getDashboardSummary({ year: 2026, month: 5 });
+
+    expect(result).toEqual(payload);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/dashboard/summary?year=2026&month=5"),
+      { cache: "no-store" },
     );
   });
 });

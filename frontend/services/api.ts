@@ -20,6 +20,24 @@ export interface CreateAccountRequest {
   dueDate: string;
 }
 
+export interface DashboardCategoryPoint {
+  label: string;
+  amount: number;
+  count: number;
+}
+
+export interface DashboardSummary {
+  year: number;
+  month: number;
+  totalAmount: number;
+  paidAmount: number;
+  pendingAmount: number;
+  totalCount: number;
+  paidCount: number;
+  pendingCount: number;
+  chart: DashboardCategoryPoint[];
+}
+
 interface GetAccountsFilter {
   year?: number;
   month?: number;
@@ -67,4 +85,26 @@ export async function createAccount(request: CreateAccountRequest): Promise<Acco
   }
 
   return (await res.json()) as Account;
+}
+
+export async function getDashboardSummary(
+  filter?: GetAccountsFilter,
+): Promise<DashboardSummary> {
+  const url = new URL(`${getApiBaseUrl()}/api/dashboard/summary`);
+
+  if (filter?.year) {
+    url.searchParams.set("year", String(filter.year));
+  }
+
+  if (filter?.month) {
+    url.searchParams.set("month", String(filter.month));
+  }
+
+  const res = await fetch(url.toString(), { cache: "no-store" });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch dashboard summary: ${res.status}`);
+  }
+
+  return (await res.json()) as DashboardSummary;
 }

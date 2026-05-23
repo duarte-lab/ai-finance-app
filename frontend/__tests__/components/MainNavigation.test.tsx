@@ -19,5 +19,10 @@ describe("MainNavigation", () => {
       "href",
       "/accounts",
     );
+
+    expect(screen.getByRole("link", { name: /dashboard/i })).toHaveAttribute(
+      "href",
+      "/dashboard",
+    );
   });
 });
