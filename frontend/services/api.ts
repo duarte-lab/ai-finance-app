@@ -85,7 +85,8 @@ export interface MonthlyClosingResult {
   participantCount: number;
   closedAtUtc: string;
   isReopened: boolean;
-  reopenedAtUtc?: string;
+  reopenedAtUtc?: string | null;
+  participants?: string[];
 }
 
 export type NotificationType = "DueInThreeDays" | "DueToday";
@@ -236,6 +237,27 @@ export async function createMonthlyClosing(
 
   if (!res.ok) {
     throw new Error(`Failed to create monthly closing: ${res.status}`);
+  }
+
+  return (await res.json()) as MonthlyClosingResult;
+}
+
+export async function getMonthlyClosing(
+  year: number,
+  month: number,
+): Promise<MonthlyClosingResult | null> {
+  const url = new URL(`${getApiBaseUrl()}/closing`);
+  url.searchParams.set("year", String(year));
+  url.searchParams.set("month", String(month));
+
+  const res = await fetch(url.toString(), { cache: "no-store" });
+
+  if (res.status === 404) {
+    return null;
+  }
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch monthly closing: ${res.status}`);
   }
 
   return (await res.json()) as MonthlyClosingResult;

@@ -4,13 +4,17 @@ import { useMemo, useState } from "react";
 import {
   Account,
   MonthlyClosingResult,
+  Person,
   createMonthlyClosing,
   getAccounts,
+  getMonthlyClosing,
   reopenMonthlyClosing,
 } from "@/services/api";
 
 interface MonthlyClosingViewProps {
   initialAccounts: Account[];
+  initialPeople: Person[];
+  initialClosing: MonthlyClosingResult | null;
   initialYear: number;
   initialMonth: number;
 }
@@ -30,21 +34,27 @@ function defaultSelectedAccountIds(accounts: Account[]): string[] {
 
 export function MonthlyClosingView({
   initialAccounts,
+  initialPeople,
+  initialClosing,
   initialYear,
   initialMonth,
 }: MonthlyClosingViewProps) {
   const [year, setYear] = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
   const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
+  const [people] = useState<Person[]>(initialPeople);
+  const [currentClosing, setCurrentClosing] = useState<MonthlyClosingResult | null>(initialClosing);
   const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>(
     defaultSelectedAccountIds(initialAccounts),
   );
-  const [participantsText, setParticipantsText] = useState("");
-  const [result, setResult] = useState<MonthlyClosingResult | null>(null);
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
+    initialClosing?.participants ?? initialPeople.map((person) => person.name),
+  );
   const [isFiltering, setIsFiltering] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isReopening, setIsReopening] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const totalSelected = useMemo(
     () =>
@@ -57,17 +67,31 @@ export function MonthlyClosingView({
   async function applyMonthFilter() {
     setIsFiltering(true);
     setError(null);
-    setResult(null);
+    setSuccessMessage(null);
 
     try {
-      const monthAccounts = await getAccounts({ year, month });
+      const [monthAccounts, monthClosing] = await Promise.all([
+        getAccounts({ year, month }),
+        getMonthlyClosing(year, month),
+      ]);
+
       setAccounts(monthAccounts);
       setSelectedAccountIds(defaultSelectedAccountIds(monthAccounts));
+      setCurrentClosing(monthClosing);
+      setSelectedParticipants(monthClosing?.participants ?? people.map((person) => person.name));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load monthly accounts.");
     } finally {
       setIsFiltering(false);
     }
+  }
+
+  function toggleParticipant(name: string) {
+    setSelectedParticipants((current) =>
+      current.includes(name)
+        ? current.filter((item) => item !== name)
+        : [...current, name],
+    );
   }
 
   function toggleAccountSelection(id: string) {
@@ -81,19 +105,15 @@ export function MonthlyClosingView({
   async function submitClosing(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setResult(null);
-
-    const participants = participantsText
-      .split(",")
-      .map((name) => name.trim())
-      .filter((name) => name.length > 0);
+    setSuccessMessage(null);
+    setCurrentClosing(null);
 
     if (selectedAccountIds.length === 0) {
       setError("Selecione pelo menos uma conta para fechar o mes.");
       return;
     }
 
-    if (participants.length === 0) {
+    if (selectedParticipants.length === 0) {
       setError("Informe ao menos um participante.");
       return;
     }
@@ -105,10 +125,11 @@ export function MonthlyClosingView({
         year,
         month,
         accountIds: selectedAccountIds,
-        participants,
+        participants: selectedParticipants,
       });
 
-      setResult(payload);
+  setCurrentClosing(payload);
+  setSuccessMessage("Mes fechado com sucesso.");
       const refreshed = await getAccounts({ year, month });
       setAccounts(refreshed);
       setSelectedAccountIds(defaultSelectedAccountIds(refreshed));
@@ -122,15 +143,17 @@ export function MonthlyClosingView({
   async function submitReopen() {
     setIsReopening(true);
     setError(null);
-    setResult(null);
+    setSuccessMessage(null);
 
     try {
-      const payload = await reopenMonthlyClosing({ year, month });
-      setResult(payload);
+      await reopenMonthlyClosing({ year, month });
 
       const refreshed = await getAccounts({ year, month });
       setAccounts(refreshed);
       setSelectedAccountIds(defaultSelectedAccountIds(refreshed));
+      setCurrentClosing(null);
+      setSelectedParticipants(people.map((person) => person.name));
+      setSuccessMessage("Mes reaberto com sucesso.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to reopen month.");
     } finally {
@@ -143,7 +166,7 @@ export function MonthlyClosingView({
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h1 className="text-2xl font-semibold text-slate-900">Fechamento mensal</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Selecione as contas do mes e divida o total entre os participantes.
+          Selecione as contas do mes, carregue participantes da lista de pessoas e divida o total igualmente.
         </p>
 
         <div className="mt-4 flex flex-wrap items-end gap-3">
@@ -184,6 +207,7 @@ export function MonthlyClosingView({
       </section>
 
       {error && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+      {successMessage && <p className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{successMessage}</p>}
 
       <form onSubmit={submitClosing} className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="text-lg font-semibold text-slate-900">Contas elegiveis</h2>
@@ -207,6 +231,7 @@ export function MonthlyClosingView({
                     aria-label={`Selecionar conta ${account.name}`}
                     type="checkbox"
                     checked={selectedAccountIds.includes(account.id)}
+                    disabled={currentClosing !== null}
                     onChange={() => toggleAccountSelection(account.id)}
                   />
                   <div className="flex flex-col">
@@ -241,17 +266,30 @@ export function MonthlyClosingView({
           )}
         </div>
 
-        <div className="mt-5">
-          <label className="flex flex-col gap-1 text-sm text-slate-700">
-            Participantes (separados por virgula)
-            <input
-              aria-label="Participantes do fechamento"
-              value={participantsText}
-              onChange={(event) => setParticipantsText(event.target.value)}
-              placeholder="Ana, Bruno, Carla"
-              className="rounded-md border border-slate-300 px-3 py-2"
-            />
-          </label>
+        <div className="mt-5 rounded-md border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-900">Participantes</h3>
+          <p className="mt-1 text-xs text-slate-600">
+            Participantes carregados da lista de pessoas. A divisao sera igual entre os selecionados.
+          </p>
+
+          <div className="mt-3 space-y-2">
+            {people.length === 0 ? (
+              <p className="text-sm text-slate-600">Nenhuma pessoa cadastrada.</p>
+            ) : (
+              people.map((person) => (
+                <label key={person.id} className="flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    aria-label={`Selecionar participante ${person.name}`}
+                    type="checkbox"
+                    checked={selectedParticipants.includes(person.name)}
+                    disabled={currentClosing !== null}
+                    onChange={() => toggleParticipant(person.name)}
+                  />
+                  {person.name}
+                </label>
+              ))
+            )}
+          </div>
         </div>
 
         <div className="mt-4 flex items-center justify-between gap-3">
@@ -261,26 +299,36 @@ export function MonthlyClosingView({
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || currentClosing !== null}
             className="rounded-md bg-blue-700 px-4 py-2 text-white disabled:opacity-60"
           >
-            {isSubmitting ? "Fechando..." : "Fechar mes"}
+            {currentClosing !== null ? "Mes ja fechado" : isSubmitting ? "Fechando..." : "Fechar mes"}
           </button>
         </div>
       </form>
 
-      {result && (
+      {currentClosing && (
         <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
           <h2 className="text-lg font-semibold text-emerald-900">Resultado do fechamento</h2>
           <p className="mt-2 text-sm text-emerald-800">
-            Status: <strong>{result.isReopened ? "Mes reaberto" : "Mes fechado"}</strong>
+            Status: <strong>{currentClosing.isReopened ? "Mes reaberto" : "Mes fechado"}</strong>
           </p>
           <p className="mt-2 text-sm text-emerald-800">
-            Total do mes: <strong>{formatCurrency(result.totalAmount)}</strong>
+            Total do mes: <strong>{formatCurrency(currentClosing.totalAmount)}</strong>
           </p>
           <p className="text-sm text-emerald-800">
-            Valor por pessoa: <strong>{formatCurrency(result.amountPerPerson)}</strong>
+            Valor por pessoa: <strong>{formatCurrency(currentClosing.amountPerPerson)}</strong>
           </p>
+          <div className="mt-4 rounded-md bg-white/70 p-4">
+            <h3 className="text-sm font-semibold text-emerald-900">Divisao por pessoa</h3>
+            <div className="mt-2 space-y-1 text-sm text-emerald-900">
+              {(currentClosing.participants ?? []).map((participant) => (
+                <p key={participant}>
+                  {participant}: <strong>{formatCurrency(currentClosing.amountPerPerson)}</strong>
+                </p>
+              ))}
+            </div>
+          </div>
         </section>
       )}
 
@@ -292,7 +340,7 @@ export function MonthlyClosingView({
         <button
           type="button"
           onClick={submitReopen}
-          disabled={isReopening}
+          disabled={isReopening || currentClosing === null}
           className="mt-4 rounded-md bg-amber-600 px-4 py-2 text-white disabled:opacity-60"
         >
           {isReopening ? "Reabrindo..." : "Reabrir mes"}

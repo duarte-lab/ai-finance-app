@@ -5,6 +5,7 @@ import * as api from "@/services/api";
 jest.mock("@/services/api", () => ({
   ...jest.requireActual("@/services/api"),
   getAccounts: jest.fn(),
+  getMonthlyClosing: jest.fn(),
   createMonthlyClosing: jest.fn(),
   reopenMonthlyClosing: jest.fn(),
 }));
@@ -33,6 +34,25 @@ describe("MonthlyClosingView", () => {
     },
   ];
 
+  const initialPeople = [
+    {
+      id: "person-1",
+      name: "Ana",
+      createdAtUtc: "2026-04-01T00:00:00Z",
+    },
+    {
+      id: "person-2",
+      name: "Bruno",
+      createdAtUtc: "2026-04-01T00:00:00Z",
+    },
+  ];
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (api.getMonthlyClosing as jest.Mock).mockResolvedValue(null);
+    (api.getAccounts as jest.Mock).mockResolvedValue([]);
+  });
+
   it("creates monthly closing and renders result", async () => {
     (api.createMonthlyClosing as jest.Mock).mockResolvedValue({
       id: "closing-1",
@@ -45,22 +65,19 @@ describe("MonthlyClosingView", () => {
       closedAtUtc: "2026-05-20T00:00:00Z",
       isReopened: false,
       reopenedAtUtc: null,
+      participants: ["Ana", "Bruno"],
     });
-
-    (api.getAccounts as jest.Mock).mockResolvedValue([]);
-
     render(
       <MonthlyClosingView
         initialAccounts={initialAccounts}
+        initialPeople={initialPeople}
+        initialClosing={null}
         initialYear={2026}
         initialMonth={5}
       />,
     );
 
     fireEvent.click(screen.getByLabelText(/selecionar conta internet/i));
-    fireEvent.change(screen.getByLabelText(/participantes do fechamento/i), {
-      target: { value: "Ana, Bruno" },
-    });
     fireEvent.click(screen.getByRole("button", { name: /fechar mes/i }));
 
     await waitFor(() => {
@@ -71,6 +88,7 @@ describe("MonthlyClosingView", () => {
         participants: ["Ana", "Bruno"],
       });
       expect(screen.getByText(/resultado do fechamento/i)).toBeInTheDocument();
+      expect(screen.getByText(/mes fechado com sucesso/i)).toBeInTheDocument();
     });
   });
 
@@ -86,13 +104,25 @@ describe("MonthlyClosingView", () => {
       closedAtUtc: "2026-05-20T00:00:00Z",
       isReopened: true,
       reopenedAtUtc: "2026-05-25T00:00:00Z",
+      participants: ["Ana", "Bruno"],
     });
-
-    (api.getAccounts as jest.Mock).mockResolvedValue([]);
-
     render(
       <MonthlyClosingView
         initialAccounts={initialAccounts}
+        initialPeople={initialPeople}
+        initialClosing={{
+          id: "closing-1",
+          year: 2026,
+          month: 5,
+          totalAmount: 1500,
+          amountPerPerson: 750,
+          accountCount: 2,
+          participantCount: 2,
+          closedAtUtc: "2026-05-20T00:00:00Z",
+          isReopened: false,
+          reopenedAtUtc: null,
+          participants: ["Ana", "Bruno"],
+        }}
         initialYear={2026}
         initialMonth={5}
       />,
@@ -102,7 +132,7 @@ describe("MonthlyClosingView", () => {
 
     await waitFor(() => {
       expect(api.reopenMonthlyClosing).toHaveBeenCalledWith({ year: 2026, month: 5 });
-      expect(screen.getByText(/mes reaberto/i)).toBeInTheDocument();
+      expect(screen.getByText(/mes reaberto com sucesso/i)).toBeInTheDocument();
     });
   });
 
@@ -123,6 +153,8 @@ describe("MonthlyClosingView", () => {
     render(
       <MonthlyClosingView
         initialAccounts={initialAccounts}
+        initialPeople={initialPeople}
+        initialClosing={null}
         initialYear={2026}
         initialMonth={5}
       />,
@@ -134,7 +166,8 @@ describe("MonthlyClosingView", () => {
     fireEvent.click(screen.getByRole("button", { name: /buscar contas/i }));
 
     await waitFor(() => {
-      expect(api.getAccounts).toHaveBeenCalledWith({ year: 2026, month: 6 });
+      expect(api.getAccounts).toHaveBeenLastCalledWith({ year: 2026, month: 6 });
+      expect(api.getMonthlyClosing).toHaveBeenLastCalledWith(2026, 6);
       expect(screen.getByText("Water")).toBeInTheDocument();
       expect(screen.getByText("Pago")).toBeInTheDocument();
     });
@@ -155,6 +188,8 @@ describe("MonthlyClosingView", () => {
             participants: [],
           },
         ]}
+        initialPeople={initialPeople}
+        initialClosing={null}
         initialYear={2026}
         initialMonth={5}
       />,
@@ -162,5 +197,33 @@ describe("MonthlyClosingView", () => {
 
     expect(screen.getByText("Security")).toBeInTheDocument();
     expect(screen.getByText("Pago")).toBeInTheDocument();
+  });
+
+  it("disables closing when the selected month is already closed", () => {
+    render(
+      <MonthlyClosingView
+        initialAccounts={initialAccounts}
+        initialPeople={initialPeople}
+        initialClosing={{
+          id: "closing-1",
+          year: 2026,
+          month: 5,
+          totalAmount: 1500,
+          amountPerPerson: 750,
+          accountCount: 2,
+          participantCount: 2,
+          closedAtUtc: "2026-05-20T00:00:00Z",
+          isReopened: false,
+          reopenedAtUtc: null,
+          participants: ["Ana", "Bruno"],
+        }}
+        initialYear={2026}
+        initialMonth={5}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /mes ja fechado/i })).toBeDisabled();
+    expect(screen.getByText("Ana:")).toBeInTheDocument();
+    expect(screen.getByText("Bruno:")).toBeInTheDocument();
   });
 });

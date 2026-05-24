@@ -1,6 +1,7 @@
 import {
   createPerson,
   createMonthlyClosing,
+  getMonthlyClosing,
   reopenMonthlyClosing,
   createAccount,
   getDueNotifications,
@@ -318,6 +319,36 @@ describe("services/api", () => {
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/closing/reopen"),
       expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("getMonthlyClosing should call closing endpoint with year and month", async () => {
+    const payload = {
+      id: "closing-1",
+      year: 2026,
+      month: 5,
+      totalAmount: 1500,
+      amountPerPerson: 750,
+      accountCount: 2,
+      participantCount: 2,
+      closedAtUtc: "2026-05-25T00:00:00Z",
+      isReopened: false,
+      reopenedAtUtc: null,
+      participants: ["Ana", "Bruno"],
+    };
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => payload,
+    });
+
+    const result = await getMonthlyClosing(2026, 5);
+
+    expect(result).toEqual(payload);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/closing?year=2026&month=5"),
+      { cache: "no-store" },
     );
   });
 });
