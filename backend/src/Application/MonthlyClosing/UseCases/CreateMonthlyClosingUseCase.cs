@@ -47,15 +47,14 @@ public class CreateMonthlyClosingUseCase
         }
 
         var monthAccounts = await _accountRepository.GetAllAsync(request.Year, request.Month);
-        var unpaidAccounts = monthAccounts.Where(account => !account.Paid).ToList();
-        var unpaidLookup = unpaidAccounts.ToDictionary(account => account.Id, account => account);
+        var monthLookup = monthAccounts.ToDictionary(account => account.Id, account => account);
 
-        if (accountIds.Any(id => !unpaidLookup.ContainsKey(id)))
+        if (accountIds.Any(id => !monthLookup.ContainsKey(id)))
         {
-            throw new InvalidOperationException("Only unpaid accounts from the selected month are allowed.");
+            throw new InvalidOperationException("Only accounts from the selected month are allowed.");
         }
 
-        var autoIncludedIds = unpaidAccounts
+        var autoIncludedIds = monthAccounts
             .Where(account => account.ParticipatesInDivision)
             .Select(account => account.Id)
             .ToList();
@@ -70,7 +69,7 @@ public class CreateMonthlyClosingUseCase
             throw new InvalidOperationException("At least one account must be selected.");
         }
 
-        var selectedAccounts = selectedIds.Select(id => unpaidLookup[id]).ToList();
+        var selectedAccounts = selectedIds.Select(id => monthLookup[id]).ToList();
         var totalAmount = selectedAccounts.Sum(account => account.Amount);
         var amountPerPerson = decimal.Round(
             totalAmount / participants.Count,

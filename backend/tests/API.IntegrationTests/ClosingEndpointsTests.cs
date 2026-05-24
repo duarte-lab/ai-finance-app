@@ -159,4 +159,40 @@ public class ClosingEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Contains(unpaidAccounts!, account => account.Id == accountOne!.Id && !account.Paid);
         Assert.Contains(unpaidAccounts!, account => account.Id == accountTwo!.Id && !account.Paid);
     }
+
+    [Fact]
+    public async Task CreateClosing_WithPaidAccountFromMonth_ShouldStillIncludeIt()
+    {
+        var (year, month) = BuildUniquePeriod();
+
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/accounts",
+            new CreateAccountRequest(
+                Name: "Security",
+                Amount: 150m,
+                DueDate: new DateTime(year, month, 23, 0, 0, 0, DateTimeKind.Utc)));
+
+        createResponse.EnsureSuccessStatusCode();
+
+        var created = await createResponse.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+
+        var payResponse = await _client.PatchAsync($"/api/accounts/{created!.Id}/pay", null);
+        payResponse.EnsureSuccessStatusCode();
+
+        var closeResponse = await _client.PostAsJsonAsync(
+            "/closing",
+            new CreateMonthlyClosingRequest(
+                Year: year,
+                Month: month,
+                AccountIds: [created.Id],
+                Participants: ["Ana", "Bruno"]));
+
+        Assert.Equal(HttpStatusCode.OK, closeResponse.StatusCode);
+
+        var payload = await closeResponse.Content.ReadFromJsonAsync<MonthlyClosingResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal(150m, payload!.TotalAmount);
+        Assert.Equal(1, payload.AccountCount);
+    }
 }

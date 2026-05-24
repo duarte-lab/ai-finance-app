@@ -22,10 +22,6 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-function toUnpaid(accounts: Account[]): Account[] {
-  return accounts.filter((account) => !account.paid);
-}
-
 function defaultSelectedAccountIds(accounts: Account[]): string[] {
   return accounts
     .filter((account) => account.participatesInDivision)
@@ -39,9 +35,9 @@ export function MonthlyClosingView({
 }: MonthlyClosingViewProps) {
   const [year, setYear] = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
-  const [accounts, setAccounts] = useState<Account[]>(toUnpaid(initialAccounts));
+  const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
   const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>(
-    defaultSelectedAccountIds(toUnpaid(initialAccounts)),
+    defaultSelectedAccountIds(initialAccounts),
   );
   const [participantsText, setParticipantsText] = useState("");
   const [result, setResult] = useState<MonthlyClosingResult | null>(null);
@@ -65,9 +61,8 @@ export function MonthlyClosingView({
 
     try {
       const monthAccounts = await getAccounts({ year, month });
-      const unpaid = toUnpaid(monthAccounts);
-      setAccounts(unpaid);
-      setSelectedAccountIds(defaultSelectedAccountIds(unpaid));
+      setAccounts(monthAccounts);
+      setSelectedAccountIds(defaultSelectedAccountIds(monthAccounts));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load monthly accounts.");
     } finally {
@@ -94,7 +89,7 @@ export function MonthlyClosingView({
       .filter((name) => name.length > 0);
 
     if (selectedAccountIds.length === 0) {
-      setError("Selecione pelo menos uma conta nao paga para fechar o mes.");
+      setError("Selecione pelo menos uma conta para fechar o mes.");
       return;
     }
 
@@ -115,9 +110,8 @@ export function MonthlyClosingView({
 
       setResult(payload);
       const refreshed = await getAccounts({ year, month });
-      const unpaid = toUnpaid(refreshed);
-      setAccounts(unpaid);
-      setSelectedAccountIds(defaultSelectedAccountIds(unpaid));
+      setAccounts(refreshed);
+      setSelectedAccountIds(defaultSelectedAccountIds(refreshed));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to close month.");
     } finally {
@@ -135,9 +129,8 @@ export function MonthlyClosingView({
       setResult(payload);
 
       const refreshed = await getAccounts({ year, month });
-      const unpaid = toUnpaid(refreshed);
-      setAccounts(unpaid);
-      setSelectedAccountIds(defaultSelectedAccountIds(unpaid));
+      setAccounts(refreshed);
+      setSelectedAccountIds(defaultSelectedAccountIds(refreshed));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to reopen month.");
     } finally {
@@ -150,7 +143,7 @@ export function MonthlyClosingView({
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h1 className="text-2xl font-semibold text-slate-900">Fechamento mensal</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Selecione as contas nao pagas do mes e divida o total entre os participantes.
+          Selecione as contas do mes e divida o total entre os participantes.
         </p>
 
         <div className="mt-4 flex flex-wrap items-end gap-3">
@@ -201,7 +194,7 @@ export function MonthlyClosingView({
         <div className="mt-4 space-y-3">
           {accounts.length === 0 ? (
             <p className="rounded-md border border-dashed border-slate-300 p-4 text-sm text-slate-600">
-              Nenhuma conta nao paga encontrada para esse mes.
+              Nenhuma conta encontrada para esse mes.
             </p>
           ) : (
             accounts.map((account) => (
@@ -229,9 +222,20 @@ export function MonthlyClosingView({
                   </div>
                 </div>
 
-                <span className="text-sm font-medium text-slate-800">
-                  {formatCurrency(account.amount)}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-slate-800">
+                    {formatCurrency(account.amount)}
+                  </span>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${
+                      account.paid
+                        ? "bg-green-100 text-green-700"
+                        : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    {account.paid ? "Pago" : "Pendente"}
+                  </span>
+                </div>
               </label>
             ))
           )}

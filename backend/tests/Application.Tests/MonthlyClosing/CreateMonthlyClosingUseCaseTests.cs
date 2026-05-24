@@ -146,4 +146,43 @@ public class CreateMonthlyClosingUseCaseTests
         await action.Should().ThrowAsync<InvalidOperationException>();
         closingRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<Domain.Entities.MonthlyClosing>()), Times.Never);
     }
+
+    [Fact]
+    public async Task CreateMonthlyClosing_WithPaidAccountFromMonth_ShouldAllowSelection()
+    {
+        var paidAccountId = Guid.NewGuid();
+
+        var accountRepositoryMock = new Mock<IAccountRepository>();
+        accountRepositoryMock
+            .Setup(x => x.GetAllAsync(2026, 5))
+            .ReturnsAsync(
+            [
+                new Account
+                {
+                    Id = paidAccountId,
+                    Name = "Internet",
+                    Amount = 500m,
+                    DueDate = new DateTime(2026, 5, 15, 0, 0, 0, DateTimeKind.Utc),
+                    Paid = true,
+                    ParticipatesInDivision = false,
+                },
+            ]);
+
+        var closingRepositoryMock = new Mock<IMonthlyClosingRepository>();
+        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
+
+        var result = await useCase.ExecuteAsync(
+            new CreateMonthlyClosingRequest(
+                Year: 2026,
+                Month: 5,
+                AccountIds: [paidAccountId],
+                Participants: ["Ana", "Bruno"]));
+
+        result.TotalAmount.Should().Be(500m);
+        result.AccountCount.Should().Be(1);
+        closingRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<Domain.Entities.MonthlyClosing>()), Times.Once);
+        accountRepositoryMock.Verify(
+            x => x.UpdateAsync(It.Is<Account>(account => account.Id == paidAccountId && account.Paid)),
+            Times.Once);
+    }
 }

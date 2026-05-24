@@ -114,7 +114,7 @@ describe("MonthlyClosingView", () => {
         amount: 120,
         dueDate: "2026-06-03T00:00:00Z",
         createdAtUtc: "2026-04-01T00:00:00Z",
-        paid: false,
+        paid: true,
         participatesInDivision: false,
         participants: [],
       },
@@ -136,6 +136,31 @@ describe("MonthlyClosingView", () => {
     await waitFor(() => {
       expect(api.getAccounts).toHaveBeenCalledWith({ year: 2026, month: 6 });
       expect(screen.getByText("Water")).toBeInTheDocument();
+      expect(screen.getByText("Pago")).toBeInTheDocument();
     });
+  });
+
+  it("renders paid accounts from initial month list", () => {
+    render(
+      <MonthlyClosingView
+        initialAccounts={[
+          {
+            id: "account-paid",
+            name: "Security",
+            amount: 150,
+            dueDate: "2026-05-23T00:00:00Z",
+            createdAtUtc: "2026-04-01T00:00:00Z",
+            paid: true,
+            participatesInDivision: true,
+            participants: [],
+          },
+        ]}
+        initialYear={2026}
+        initialMonth={5}
+      />,
+    );
+
+    expect(screen.getByText("Security")).toBeInTheDocument();
+    expect(screen.getByText("Pago")).toBeInTheDocument();
   });
 });
