@@ -1,3 +1,9 @@
-Especialista em Next.js
-Foco: UI e consumo de API
-Sem regra de negócio
+Especialista em Next.js.
+
+Responsável:
+- UI
+- hooks
+- consumo API
+
+Nunca:
+- implementar regra de negócio
