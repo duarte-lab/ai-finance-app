@@ -19,7 +19,6 @@ export interface Account {
 
 export interface AccountParticipant {
   personId: string;
-  percentage: number;
 }
 
 export interface Person {

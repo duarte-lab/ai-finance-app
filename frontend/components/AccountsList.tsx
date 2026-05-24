@@ -62,36 +62,12 @@ export function AccountsList({
     }
   }
 
-  function rebalancePercentages(personIds: string[]): AccountParticipant[] {
-    if (personIds.length === 0) {
-      return [];
-    }
-
-    const base = Number((100 / personIds.length).toFixed(2));
-    let consumed = 0;
-
-    return personIds.map((personId, index) => {
-      if (index < personIds.length - 1) {
-        consumed += base;
-        return { personId, percentage: base };
-      }
-
-      return { personId, percentage: Number((100 - consumed).toFixed(2)) };
-    });
-  }
-
   function toggleParticipant(personId: string) {
     const selectedIds = participants.map((item) => item.personId);
-    const nextIds = selectedIds.includes(personId)
-      ? selectedIds.filter((item) => item !== personId)
-      : [...selectedIds, personId];
-
-    setParticipants(rebalancePercentages(nextIds));
-  }
-
-  function updateParticipantPercentage(personId: string, percentage: number) {
     setParticipants((current) =>
-      current.map((item) => (item.personId === personId ? { ...item, percentage } : item)),
+      selectedIds.includes(personId)
+        ? current.filter((item) => item.personId !== personId)
+        : [...current, { personId }],
     );
   }
 
@@ -142,12 +118,6 @@ export function AccountsList({
   async function submitNewAccount(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-
-    const percentageTotal = participants.reduce((total, item) => total + item.percentage, 0);
-    if (participants.length > 0 && Math.abs(percentageTotal - 100) > 0.01) {
-      setError("A soma dos percentuais dos participantes deve ser 100%.");
-      return;
-    }
 
     try {
       const created = await createAccount({
@@ -282,7 +252,7 @@ export function AccountsList({
           <div className="md:col-span-4 rounded-md border border-slate-200 p-3">
             <h2 className="text-sm font-semibold text-slate-900">Despesa compartilhada</h2>
             <p className="mb-2 text-xs text-slate-600">
-              Selecione participantes e ajuste percentuais (a soma deve ser 100%).
+              Selecione as pessoas participantes desta conta.
             </p>
 
             {people.length === 0 ? (
@@ -304,30 +274,10 @@ export function AccountsList({
                         {person.name}
                       </label>
 
-                      {selected && (
-                        <label className="flex items-center gap-2 text-sm text-slate-700">
-                          %
-                          <input
-                            aria-label={`Percentual de ${person.name}`}
-                            type="number"
-                            min={0.01}
-                            max={100}
-                            step={0.01}
-                            value={selected.percentage}
-                            onChange={(event) =>
-                              updateParticipantPercentage(person.id, Number(event.target.value))
-                            }
-                            className="w-24 rounded-md border border-slate-300 px-2 py-1"
-                          />
-                        </label>
-                      )}
+                      {selected && <span className="text-xs text-emerald-700">Participante</span>}
                     </div>
                   );
                 })}
-
-                <p className="text-xs text-slate-600">
-                  Soma atual: {participants.reduce((total, item) => total + item.percentage, 0).toFixed(2)}%
-                </p>
               </div>
             )}
           </div>
@@ -392,7 +342,7 @@ export function AccountsList({
                 </span>
                 {account.participants.length > 0 && (
                   <span className="text-sm text-slate-600">
-                    Compartilhado: {account.participants.map((item) => `${getPersonName(item.personId)} (${item.percentage}%)`).join(", ")}
+                    Participantes: {account.participants.map((item) => getPersonName(item.personId)).join(", ")}
                   </span>
                 )}
 
