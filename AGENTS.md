@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Stack
-- .NET 8
+- .NET 9
 - Next.js
 - MongoDB
 - Docker

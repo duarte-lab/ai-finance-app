@@ -3,7 +3,7 @@
 Sistema de controle de contas domésticas.
 
 ## Stack
-- .NET 8
+- .NET 9
 - Next.js
 - MongoDB
 
@@ -14,3 +14,4 @@ Sistema de controle de contas domésticas.
 - Sempre usar UTC
 - DTO obrigatório
 - Controllers finos
+- API REST para contas, dashboard, pessoas e fechamento mensal

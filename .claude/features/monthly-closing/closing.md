@@ -19,8 +19,15 @@ Fechar o mês e dividir despesas.
 - Exibir o painel de mês fechado com o calculo da divisão pelas pessoas
 
 ## Backend
+- Endpoint GET /closing?year={year}&month={month}
 - Endpoint POST /closing
+- Endpoint POST /closing/reopen
 - Criar entidade MonthlyClosing
+
+## Comportamento atual
+- O fechamento ativo do mes pode ser consultado antes de tentar fechar novamente
+- O fechamento registra participantes selecionados a partir da lista de pessoas
+- A reabertura desfaz o fechamento ativo do periodo
 
 ## Resultado esperado
 - Total do mês
