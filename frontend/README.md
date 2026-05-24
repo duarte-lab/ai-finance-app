@@ -35,7 +35,7 @@ npm test -- --runInBand
 ## Integracao com a API
 
 - Dashboard: resumo mensal e notificacoes de vencimento
-- Accounts: operacoes de contas e pessoas participantes
+- Accounts: operacoes de contas, pessoas e marcacao para divisao mensal
 - Closing: consulta, criacao e reabertura do fechamento mensal
 
 ## Observacoes

@@ -1,21 +1,21 @@
 # Feature: Shared Expenses
 
 ## Objetivo
-Associar pessoas participantes a contas.
+Manter o cadastro de pessoas participantes usado no fechamento mensal.
 
 ## Requisitos
 - Cadastro de pessoas
-- Associação com contas
+- Listagem de pessoas cadastradas
 
 ## Backend
 - Entidade Person
-- Relação N:N com Account
+- Endpoint GET /api/people
+- Endpoint POST /api/people
 
 ## Regras
-- Pessoa não pode participar duas vezes
-- Participantes devem existir na lista de pessoas cadastradas
+- Nome da pessoa e obrigatorio
+- Pessoas cadastradas ficam disponiveis para selecao no fechamento mensal
 
 ## Testes
-- Associação correta de participantes na conta
-- Validação de participantes duplicados
-- Validação de participantes inexistentes
+- Criacao de pessoa
+- Retorno da lista de pessoas
