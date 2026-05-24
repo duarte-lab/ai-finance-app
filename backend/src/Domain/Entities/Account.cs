@@ -9,7 +9,6 @@ public class Account
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public bool Paid { get; set; }
     public bool ParticipatesInDivision { get; set; }
-    public List<AccountParticipant> Participants { get; set; } = [];
 
     public void MarkAsPaid()
     {

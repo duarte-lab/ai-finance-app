@@ -1,7 +1,5 @@
 namespace Application.Accounts.DTOs;
 
-public record AccountParticipantResponse(Guid PersonId);
-
 public record AccountResponse(
 	Guid Id,
 	string Name,
@@ -9,7 +7,6 @@ public record AccountResponse(
 	DateTime DueDate,
 	DateTime CreatedAtUtc,
 	bool Paid,
-	bool ParticipatesInDivision,
-	IReadOnlyCollection<AccountParticipantResponse> Participants);
+	bool ParticipatesInDivision);
 
 public record UpdateDivisionParticipationRequest(bool ParticipatesInDivision);

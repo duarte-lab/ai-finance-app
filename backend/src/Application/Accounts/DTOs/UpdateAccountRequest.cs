@@ -5,5 +5,4 @@ public record UpdateAccountRequest(
 	decimal Amount,
 	DateTime DueDate,
 	bool Paid,
-	IReadOnlyCollection<AccountParticipantRequest>? Participants = null,
 	bool ParticipatesInDivision = false);

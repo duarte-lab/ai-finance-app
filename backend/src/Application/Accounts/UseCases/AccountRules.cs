@@ -1,7 +1,3 @@
-using Application.Accounts.DTOs;
-using Application.People.Interfaces;
-using Domain.Entities;
-
 namespace Application.Accounts.UseCases;
 
 internal static class AccountRules
@@ -30,51 +26,5 @@ internal static class AccountRules
             DateTimeKind.Local => value.ToUniversalTime(),
             _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
         };
-    }
-
-    public static IReadOnlyCollection<AccountParticipant> BuildParticipants(
-        IReadOnlyCollection<AccountParticipantRequest>? participants)
-    {
-        if (participants is null || participants.Count == 0)
-        {
-            return [];
-        }
-
-        if (participants.Any(x => x.PersonId == Guid.Empty))
-        {
-            throw new ArgumentException("Participant person id is required.", nameof(participants));
-        }
-
-        var hasDuplicates = participants
-            .GroupBy(x => x.PersonId)
-            .Any(group => group.Count() > 1);
-
-        if (hasDuplicates)
-        {
-            throw new ArgumentException("A person cannot participate more than once.", nameof(participants));
-        }
-
-        return participants
-            .Select(x => new AccountParticipant
-            {
-                PersonId = x.PersonId,
-            })
-            .ToList();
-    }
-
-    public static async Task ValidateParticipantsExistAsync(
-        IPersonRepository personRepository,
-        IReadOnlyCollection<AccountParticipant> participants)
-    {
-        if (participants.Count == 0)
-        {
-            return;
-        }
-
-        var people = await personRepository.GetByIdsAsync(participants.Select(x => x.PersonId).ToList());
-        if (people.Count != participants.Count)
-        {
-            throw new ArgumentException("All participants must reference existing people.", nameof(participants));
-        }
     }
 }

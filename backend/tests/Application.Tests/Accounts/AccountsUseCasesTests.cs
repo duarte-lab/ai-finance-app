@@ -1,7 +1,6 @@
 using Application.Accounts.DTOs;
 using Application.Accounts.Interfaces;
 using Application.Accounts.UseCases;
-using Application.People.Interfaces;
 using Domain.Entities;
 using FluentAssertions;
 using Moq;
@@ -15,8 +14,7 @@ public class AccountsUseCasesTests
     public async Task CreateAccount_ValidRequest_CreatesWithPaidFalseAndUtcDate()
     {
         var repositoryMock = new Mock<IAccountRepository>();
-        var personRepositoryMock = new Mock<IPersonRepository>();
-        var useCase = new CreateAccountUseCase(repositoryMock.Object, personRepositoryMock.Object);
+        var useCase = new CreateAccountUseCase(repositoryMock.Object);
         var dueDate = new DateTime(2026, 5, 10, 10, 0, 0, DateTimeKind.Local);
 
         var result = await useCase.ExecuteAsync(new CreateAccountRequest("Internet", 120.50m, dueDate));
@@ -40,8 +38,7 @@ public class AccountsUseCasesTests
     public async Task CreateAccount_NegativeAmount_ThrowsArgumentException()
     {
         var repositoryMock = new Mock<IAccountRepository>();
-        var personRepositoryMock = new Mock<IPersonRepository>();
-        var useCase = new CreateAccountUseCase(repositoryMock.Object, personRepositoryMock.Object);
+        var useCase = new CreateAccountUseCase(repositoryMock.Object);
 
         var action = async () => await useCase.ExecuteAsync(
             new CreateAccountRequest("Rent", -1m, DateTime.UtcNow));
@@ -54,8 +51,7 @@ public class AccountsUseCasesTests
     public async Task CreateAccount_RetroactiveDueDate_ShouldAllowCreation()
     {
         var repositoryMock = new Mock<IAccountRepository>();
-        var personRepositoryMock = new Mock<IPersonRepository>();
-        var useCase = new CreateAccountUseCase(repositoryMock.Object, personRepositoryMock.Object);
+        var useCase = new CreateAccountUseCase(repositoryMock.Object);
         var pastDueDate = DateTime.UtcNow.AddDays(-30);
 
         var result = await useCase.ExecuteAsync(new CreateAccountRequest("Past bill", 50m, pastDueDate));
@@ -64,87 +60,6 @@ public class AccountsUseCasesTests
         result.DueDate.Should().Be(pastDueDate);
         result.Paid.Should().BeFalse();
         repositoryMock.Verify(x => x.CreateAsync(It.IsAny<Account>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task CreateAccount_WithDuplicateParticipant_ShouldThrowArgumentException()
-    {
-        var personId = Guid.NewGuid();
-        var repositoryMock = new Mock<IAccountRepository>();
-        var personRepositoryMock = new Mock<IPersonRepository>();
-        var useCase = new CreateAccountUseCase(repositoryMock.Object, personRepositoryMock.Object);
-
-        var action = async () => await useCase.ExecuteAsync(
-            new CreateAccountRequest(
-                "Rent",
-                1500m,
-                DateTime.UtcNow,
-                [
-                    new AccountParticipantRequest(personId),
-                    new AccountParticipantRequest(personId),
-                ]));
-
-        await action.Should().ThrowAsync<ArgumentException>();
-        repositoryMock.Verify(x => x.CreateAsync(It.IsAny<Account>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task CreateAccount_WithUnknownParticipant_ShouldThrowArgumentException()
-    {
-        var repositoryMock = new Mock<IAccountRepository>();
-        var personRepositoryMock = new Mock<IPersonRepository>();
-        personRepositoryMock
-            .Setup(x => x.GetByIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>()))
-            .ReturnsAsync(Array.Empty<Person>());
-        var useCase = new CreateAccountUseCase(repositoryMock.Object, personRepositoryMock.Object);
-
-        var action = async () => await useCase.ExecuteAsync(
-            new CreateAccountRequest(
-                "Rent",
-                1500m,
-                DateTime.UtcNow,
-                [
-                    new AccountParticipantRequest(Guid.NewGuid()),
-                ]));
-
-        await action.Should().ThrowAsync<ArgumentException>();
-        repositoryMock.Verify(x => x.CreateAsync(It.IsAny<Account>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task CreateAccount_WithValidParticipants_ShouldPersistParticipants()
-    {
-        var personOneId = Guid.NewGuid();
-        var personTwoId = Guid.NewGuid();
-        var repositoryMock = new Mock<IAccountRepository>();
-        var personRepositoryMock = new Mock<IPersonRepository>();
-        personRepositoryMock
-            .Setup(x => x.GetByIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>()))
-            .ReturnsAsync(
-            [
-                new Person { Id = personOneId, Name = "Ana" },
-                new Person { Id = personTwoId, Name = "Bruno" },
-            ]);
-
-        var useCase = new CreateAccountUseCase(repositoryMock.Object, personRepositoryMock.Object);
-
-        var result = await useCase.ExecuteAsync(
-            new CreateAccountRequest(
-                "Rent",
-                1500m,
-                DateTime.UtcNow,
-                [
-                    new AccountParticipantRequest(personOneId),
-                    new AccountParticipantRequest(personTwoId),
-                ]));
-
-        result.Participants.Should().HaveCount(2);
-        result.Participants.Select(x => x.PersonId).Should().BeEquivalentTo([personOneId, personTwoId]);
-
-        repositoryMock.Verify(
-            x => x.CreateAsync(It.Is<Account>(a =>
-                a.Participants.Count == 2)),
-            Times.Once);
     }
 
     [Fact]
