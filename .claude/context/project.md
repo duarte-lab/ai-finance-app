@@ -5,7 +5,7 @@ Sistema de controle de contas domésticas.
 ## Stack
 - .NET 8
 - Next.js
-- PostgreSQL
+- MongoDB
 
 ## Arquitetura
 - Clean Architecture
