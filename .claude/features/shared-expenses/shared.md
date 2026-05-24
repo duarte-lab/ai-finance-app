@@ -1,7 +1,7 @@
 # Feature: Shared Expenses
 
 ## Objetivo
-Dividir contas entre pessoas.
+Associar pessoas participantes a contas.
 
 ## Requisitos
 - Cadastro de pessoas
@@ -13,8 +13,9 @@ Dividir contas entre pessoas.
 
 ## Regras
 - Pessoa não pode participar duas vezes
-- Soma dos percentuais = 100%
+- Participantes devem existir na lista de pessoas cadastradas
 
 ## Testes
-- Divisão correta
-- Validação de percentuais
+- Associação correta de participantes na conta
+- Validação de participantes duplicados
+- Validação de participantes inexistentes
