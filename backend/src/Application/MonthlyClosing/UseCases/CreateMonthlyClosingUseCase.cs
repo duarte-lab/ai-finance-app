@@ -35,11 +35,6 @@ public class CreateMonthlyClosingUseCase
             .Distinct()
             .ToList();
 
-        if (accountIds.Count == 0)
-        {
-            throw new InvalidOperationException("At least one account must be selected.");
-        }
-
         var participants = request.Participants
             .Select(name => name.Trim())
             .Where(name => !string.IsNullOrWhiteSpace(name))
@@ -60,7 +55,22 @@ public class CreateMonthlyClosingUseCase
             throw new InvalidOperationException("Only unpaid accounts from the selected month are allowed.");
         }
 
-        var selectedAccounts = accountIds.Select(id => unpaidLookup[id]).ToList();
+        var autoIncludedIds = unpaidAccounts
+            .Where(account => account.ParticipatesInDivision)
+            .Select(account => account.Id)
+            .ToList();
+
+        var selectedIds = autoIncludedIds
+            .Union(accountIds)
+            .Distinct()
+            .ToList();
+
+        if (selectedIds.Count == 0)
+        {
+            throw new InvalidOperationException("At least one account must be selected.");
+        }
+
+        var selectedAccounts = selectedIds.Select(id => unpaidLookup[id]).ToList();
         var totalAmount = selectedAccounts.Sum(account => account.Amount);
         var amountPerPerson = decimal.Round(
             totalAmount / participants.Count,
@@ -73,11 +83,18 @@ public class CreateMonthlyClosingUseCase
             Year = request.Year,
             Month = request.Month,
             ClosedAtUtc = DateTime.UtcNow,
+            ReopenedAtUtc = null,
             AccountIds = selectedAccounts.Select(account => account.Id).ToList(),
             Participants = participants,
             TotalAmount = totalAmount,
             AmountPerPerson = amountPerPerson,
         };
+
+        foreach (var account in selectedAccounts)
+        {
+            account.MarkAsPaid();
+            await _accountRepository.UpdateAsync(account);
+        }
 
         await _monthlyClosingRepository.CreateAsync(closing);
 
@@ -89,6 +106,8 @@ public class CreateMonthlyClosingUseCase
             AmountPerPerson: closing.AmountPerPerson,
             AccountCount: closing.AccountIds.Count,
             ParticipantCount: closing.Participants.Count,
-            ClosedAtUtc: closing.ClosedAtUtc);
+            ClosedAtUtc: closing.ClosedAtUtc,
+            IsReopened: false,
+            ReopenedAtUtc: null);
     }
 }

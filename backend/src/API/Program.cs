@@ -62,6 +62,7 @@ builder.Services.AddScoped<DeleteAccountUseCase>();
 builder.Services.AddScoped<MarkAccountAsPaidUseCase>();
 builder.Services.AddScoped<GetDashboardSummaryUseCase>();
 builder.Services.AddScoped<CreateMonthlyClosingUseCase>();
+builder.Services.AddScoped<ReopenMonthlyClosingUseCase>();
 builder.Services.AddScoped<GetPeopleUseCase>();
 builder.Services.AddScoped<CreatePersonUseCase>();
 builder.Services.AddScoped<GetDueNotificationsUseCase>();

@@ -29,6 +29,7 @@ public class CreateMonthlyClosingUseCaseTests
                     Amount = 1000m,
                     DueDate = new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc),
                     Paid = false,
+                    ParticipatesInDivision = true,
                 },
                 new Account
                 {
@@ -37,6 +38,7 @@ public class CreateMonthlyClosingUseCaseTests
                     Amount = 500m,
                     DueDate = new DateTime(2026, 5, 15, 0, 0, 0, DateTimeKind.Utc),
                     Paid = false,
+                    ParticipatesInDivision = false,
                 },
                 new Account
                 {
@@ -76,12 +78,60 @@ public class CreateMonthlyClosingUseCaseTests
                 closing.AccountIds.Count == 2 &&
                 closing.Participants.Count == 3)),
             Times.Once);
+
+        accountRepositoryMock.Verify(
+            x => x.UpdateAsync(It.IsAny<Account>()),
+            Times.Exactly(2));
     }
 
     [Fact]
-    public async Task CreateMonthlyClosing_WithoutSelectedAccounts_ShouldThrowError()
+    public async Task CreateMonthlyClosing_WithAutoIncludedAccountsAndNoManualSelection_ShouldSucceed()
+    {
+        var autoIncludedId = Guid.NewGuid();
+
+        var accountRepositoryMock = new Mock<IAccountRepository>();
+        accountRepositoryMock
+            .Setup(x => x.GetAllAsync(2026, 5))
+            .ReturnsAsync(
+            [
+                new Account
+                {
+                    Id = autoIncludedId,
+                    Name = "Rent",
+                    Amount = 1000m,
+                    DueDate = new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc),
+                    Paid = false,
+                    ParticipatesInDivision = true,
+                },
+            ]);
+
+        var closingRepositoryMock = new Mock<IMonthlyClosingRepository>();
+
+        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
+
+        var result = await useCase.ExecuteAsync(
+            new CreateMonthlyClosingRequest(
+                Year: 2026,
+                Month: 5,
+                AccountIds: [],
+                Participants: ["Ana", "Bruno"]));
+
+        result.TotalAmount.Should().Be(1000m);
+        result.AccountCount.Should().Be(1);
+        accountRepositoryMock.Verify(
+            x => x.UpdateAsync(It.Is<Account>(account => account.Id == autoIncludedId && account.Paid)),
+            Times.Once);
+        closingRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<Domain.Entities.MonthlyClosing>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateMonthlyClosing_WithoutSelectedOrAutoIncludedAccounts_ShouldThrowError()
     {
         var accountRepositoryMock = new Mock<IAccountRepository>();
+        accountRepositoryMock
+            .Setup(x => x.GetAllAsync(2026, 5))
+            .ReturnsAsync(Array.Empty<Account>());
+
         var closingRepositoryMock = new Mock<IMonthlyClosingRepository>();
 
         var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);

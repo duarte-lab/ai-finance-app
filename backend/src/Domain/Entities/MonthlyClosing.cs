@@ -6,6 +6,7 @@ public class MonthlyClosing
     public int Year { get; set; }
     public int Month { get; set; }
     public DateTime ClosedAtUtc { get; set; }
+    public DateTime? ReopenedAtUtc { get; set; }
     public required IReadOnlyCollection<Guid> AccountIds { get; set; }
     public required IReadOnlyCollection<string> Participants { get; set; }
     public decimal TotalAmount { get; set; }

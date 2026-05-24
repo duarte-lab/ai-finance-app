@@ -8,4 +8,8 @@ public record MonthlyClosingResponse(
     decimal AmountPerPerson,
     int AccountCount,
     int ParticipantCount,
-    DateTime ClosedAtUtc);
+    DateTime ClosedAtUtc,
+    bool IsReopened = false,
+    DateTime? ReopenedAtUtc = null);
+
+public record ReopenMonthlyClosingRequest(int Year, int Month);
