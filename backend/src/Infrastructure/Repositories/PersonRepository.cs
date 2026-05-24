@@ -17,7 +17,7 @@ public class PersonRepository : IPersonRepository
     public async Task<IReadOnlyCollection<Person>> GetAllAsync()
     {
         return await _people
-            .Find(Builders<Person>.Filter.Empty)
+            .Find(x => x.DeletedAtUtc == null)
             .SortBy(x => x.Name)
             .ToListAsync();
     }
@@ -35,12 +35,22 @@ public class PersonRepository : IPersonRepository
         }
 
         return await _people
-            .Find(Builders<Person>.Filter.In(x => x.Id, ids))
+            .Find(x => ids.Contains(x.Id) && x.DeletedAtUtc == null)
             .ToListAsync();
     }
 
     public async Task CreateAsync(Person person)
     {
         await _people.InsertOneAsync(person);
+    }
+
+    public async Task UpdateAsync(Person person)
+    {
+        await _people.ReplaceOneAsync(x => x.Id == person.Id, person);
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        await _people.DeleteOneAsync(x => x.Id == id);
     }
 }

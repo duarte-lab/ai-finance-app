@@ -66,6 +66,8 @@ builder.Services.AddScoped<GetMonthlyClosingUseCase>();
 builder.Services.AddScoped<ReopenMonthlyClosingUseCase>();
 builder.Services.AddScoped<GetPeopleUseCase>();
 builder.Services.AddScoped<CreatePersonUseCase>();
+builder.Services.AddScoped<UpdatePersonUseCase>();
+builder.Services.AddScoped<DeletePersonUseCase>();
 builder.Services.AddScoped<GetDueNotificationsUseCase>();
 builder.Services.AddSingleton<INotificationClock, SystemNotificationClock>();
 builder.Services.AddHostedService<NotificationsBackgroundService>();

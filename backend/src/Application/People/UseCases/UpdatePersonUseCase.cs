@@ -1,21 +1,25 @@
 using Application.People.DTOs;
 using Application.People.Interfaces;
-using Domain.Entities;
 
 namespace Application.People.UseCases;
 
-public class CreatePersonUseCase
+public class UpdatePersonUseCase
 {
     private const int MaxNameLength = 50;
     private readonly IPersonRepository _repository;
 
-    public CreatePersonUseCase(IPersonRepository repository)
+    public UpdatePersonUseCase(IPersonRepository repository)
     {
         _repository = repository;
     }
 
-    public async Task<PersonResponse> ExecuteAsync(CreatePersonRequest request)
+    public async Task<PersonResponse> ExecuteAsync(Guid id, UpdatePersonRequest request)
     {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("Person id is required.", nameof(id));
+        }
+
         if (string.IsNullOrWhiteSpace(request.Name))
         {
             throw new ArgumentException("Name is required.", nameof(request));
@@ -27,15 +31,14 @@ public class CreatePersonUseCase
             throw new ArgumentException($"Name must have at most {MaxNameLength} characters.", nameof(request));
         }
 
-        var person = new Person
+        var person = await _repository.GetByIdAsync(id);
+        if (person is null || person.DeletedAtUtc is not null)
         {
-            Id = Guid.NewGuid(),
-            Name = trimmedName,
-            CreatedAtUtc = DateTime.UtcNow,
-            DeletedAtUtc = null,
-        };
+            throw new KeyNotFoundException("Person not found.");
+        }
 
-        await _repository.CreateAsync(person);
+        person.Name = trimmedName;
+        await _repository.UpdateAsync(person);
 
         return new PersonResponse(person.Id, person.Name, person.CreatedAtUtc, person.DeletedAtUtc);
     }

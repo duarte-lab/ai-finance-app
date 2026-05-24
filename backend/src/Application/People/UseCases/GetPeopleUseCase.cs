@@ -17,7 +17,7 @@ public class GetPeopleUseCase
         var people = await _repository.GetAllAsync();
         return people
             .OrderBy(x => x.Name)
-            .Select(x => new PersonResponse(x.Id, x.Name, x.CreatedAtUtc))
+            .Select(x => new PersonResponse(x.Id, x.Name, x.CreatedAtUtc, x.DeletedAtUtc))
             .ToList();
     }
 }
