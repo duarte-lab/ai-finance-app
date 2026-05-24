@@ -29,6 +29,7 @@ describe("AccountsList", () => {
 
   beforeEach(() => {
     (api.getPeople as jest.Mock).mockResolvedValue([]);
+    (api.createAccount as jest.Mock).mockReset();
   });
 
   it("shows accounts and marks an account as paid", async () => {
@@ -139,6 +140,36 @@ describe("AccountsList", () => {
     await waitFor(() => {
       expect(api.updateAccount).toHaveBeenCalledTimes(1);
       expect(screen.getByText("Rent updated")).toBeInTheDocument();
+    });
+  });
+
+  it("shows validation error when participant percentages do not sum to 100", async () => {
+    (api.getPeople as jest.Mock).mockResolvedValue([
+      { id: "person-1", name: "Ana", createdAtUtc: "2026-05-01T00:00:00Z" },
+      { id: "person-2", name: "Bruno", createdAtUtc: "2026-05-01T00:00:00Z" },
+    ]);
+
+    render(<AccountsList initialAccounts={initialAccounts} initialYear={2026} initialMonth={5} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("2 pessoa(s) cadastrada(s)")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Nome da conta"), { target: { value: "Water" } });
+    fireEvent.change(screen.getByLabelText("Valor da conta"), { target: { value: "90" } });
+    fireEvent.change(screen.getByLabelText("Data de vencimento"), { target: { value: "2026-05-22" } });
+
+    fireEvent.click(screen.getByLabelText("Selecionar participante Ana"));
+    fireEvent.click(screen.getByLabelText("Selecionar participante Bruno"));
+
+    fireEvent.change(screen.getByLabelText("Percentual de Ana"), { target: { value: "70" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "Criar conta" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("A soma dos percentuais dos participantes deve ser 100%."))
+        .toBeInTheDocument();
+      expect(api.createAccount).not.toHaveBeenCalled();
     });
   });
 });

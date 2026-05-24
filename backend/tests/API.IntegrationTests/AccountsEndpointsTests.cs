@@ -104,6 +104,29 @@ public class AccountsEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
+    public async Task CreateAccount_WithDuplicateParticipants_ShouldReturnBadRequest()
+    {
+        var personResponse = await _client.PostAsJsonAsync("/api/people", new CreatePersonRequest("Ana"));
+        Assert.Equal(HttpStatusCode.Created, personResponse.StatusCode);
+
+        var person = await personResponse.Content.ReadFromJsonAsync<PersonResponse>();
+        Assert.NotNull(person);
+
+        var request = new CreateAccountRequest(
+            "Rent",
+            2500m,
+            new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc),
+            [
+                new AccountParticipantRequest(person!.Id, 50m),
+                new AccountParticipantRequest(person.Id, 50m),
+            ]);
+
+        var response = await _client.PostAsJsonAsync("/api/accounts", request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task CreateAccount_WithNegativeAmount_ShouldReturnBadRequest()
     {
         var request = new CreateAccountRequest(
