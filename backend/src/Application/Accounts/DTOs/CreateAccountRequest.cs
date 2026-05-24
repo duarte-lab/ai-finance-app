@@ -1,6 +1,6 @@
 namespace Application.Accounts.DTOs;
 
-public record AccountParticipantRequest(Guid PersonId, decimal Percentage);
+public record AccountParticipantRequest(Guid PersonId);
 
 public record CreateAccountRequest(
 	string Name,

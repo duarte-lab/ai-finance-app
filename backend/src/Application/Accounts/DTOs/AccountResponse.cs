@@ -1,6 +1,6 @@
 namespace Application.Accounts.DTOs;
 
-public record AccountParticipantResponse(Guid PersonId, decimal Percentage);
+public record AccountParticipantResponse(Guid PersonId);
 
 public record AccountResponse(
 	Guid Id,

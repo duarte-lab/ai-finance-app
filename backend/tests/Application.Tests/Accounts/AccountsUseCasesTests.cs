@@ -80,8 +80,8 @@ public class AccountsUseCasesTests
                 1500m,
                 DateTime.UtcNow,
                 [
-                    new AccountParticipantRequest(personId, 50m),
-                    new AccountParticipantRequest(personId, 50m),
+                    new AccountParticipantRequest(personId),
+                    new AccountParticipantRequest(personId),
                 ]));
 
         await action.Should().ThrowAsync<ArgumentException>();
@@ -89,10 +89,13 @@ public class AccountsUseCasesTests
     }
 
     [Fact]
-    public async Task CreateAccount_WithParticipantsSummingNot100_ShouldThrowArgumentException()
+    public async Task CreateAccount_WithUnknownParticipant_ShouldThrowArgumentException()
     {
         var repositoryMock = new Mock<IAccountRepository>();
         var personRepositoryMock = new Mock<IPersonRepository>();
+        personRepositoryMock
+            .Setup(x => x.GetByIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>()))
+            .ReturnsAsync(Array.Empty<Person>());
         var useCase = new CreateAccountUseCase(repositoryMock.Object, personRepositoryMock.Object);
 
         var action = async () => await useCase.ExecuteAsync(
@@ -101,8 +104,7 @@ public class AccountsUseCasesTests
                 1500m,
                 DateTime.UtcNow,
                 [
-                    new AccountParticipantRequest(Guid.NewGuid(), 40m),
-                    new AccountParticipantRequest(Guid.NewGuid(), 40m),
+                    new AccountParticipantRequest(Guid.NewGuid()),
                 ]));
 
         await action.Should().ThrowAsync<ArgumentException>();
@@ -132,17 +134,16 @@ public class AccountsUseCasesTests
                 1500m,
                 DateTime.UtcNow,
                 [
-                    new AccountParticipantRequest(personOneId, 60m),
-                    new AccountParticipantRequest(personTwoId, 40m),
+                    new AccountParticipantRequest(personOneId),
+                    new AccountParticipantRequest(personTwoId),
                 ]));
 
         result.Participants.Should().HaveCount(2);
-        result.Participants.Sum(x => x.Percentage).Should().Be(100m);
+        result.Participants.Select(x => x.PersonId).Should().BeEquivalentTo([personOneId, personTwoId]);
 
         repositoryMock.Verify(
             x => x.CreateAsync(It.Is<Account>(a =>
-                a.Participants.Count == 2 &&
-                a.Participants.Sum(p => p.Percentage) == 100m)),
+                a.Participants.Count == 2)),
             Times.Once);
     }
 

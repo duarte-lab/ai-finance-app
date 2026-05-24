@@ -16,7 +16,6 @@ internal static class AccountMapper
             account.ParticipatesInDivision,
             account.Participants
                 .Select(participant => new AccountParticipantResponse(
-                    participant.PersonId,
-                    participant.Percentage))
+                    participant.PersonId))
                 .ToList());
 }
