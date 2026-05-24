@@ -14,10 +14,18 @@ public class MonthlyClosingRepository : IMonthlyClosingRepository
         _closings = context.MonthlyClosings;
     }
 
-    public async Task<MonthlyClosing?> GetByYearMonthAsync(int year, int month)
+    public async Task<MonthlyClosing?> GetActiveByYearMonthAsync(int year, int month)
     {
         return await _closings
             .Find(x => x.Year == year && x.Month == month && x.ReopenedAtUtc == null)
+            .SortByDescending(x => x.ClosedAtUtc)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<MonthlyClosing?> GetLatestByYearMonthAsync(int year, int month)
+    {
+        return await _closings
+            .Find(x => x.Year == year && x.Month == month)
             .SortByDescending(x => x.ClosedAtUtc)
             .FirstOrDefaultAsync();
     }

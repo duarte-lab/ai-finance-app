@@ -51,6 +51,12 @@ public class CreateMonthlyClosingUseCaseTests
             ]);
 
         var closingRepositoryMock = new Mock<IMonthlyClosingRepository>();
+        closingRepositoryMock
+            .Setup(x => x.GetActiveByYearMonthAsync(2026, 5))
+            .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
+        closingRepositoryMock
+            .Setup(x => x.GetLatestByYearMonthAsync(2026, 5))
+            .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
 
         var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
 
@@ -106,6 +112,12 @@ public class CreateMonthlyClosingUseCaseTests
             ]);
 
         var closingRepositoryMock = new Mock<IMonthlyClosingRepository>();
+        closingRepositoryMock
+            .Setup(x => x.GetActiveByYearMonthAsync(2026, 5))
+            .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
+        closingRepositoryMock
+            .Setup(x => x.GetLatestByYearMonthAsync(2026, 5))
+            .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
 
         var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
 
@@ -133,6 +145,12 @@ public class CreateMonthlyClosingUseCaseTests
             .ReturnsAsync(Array.Empty<Account>());
 
         var closingRepositoryMock = new Mock<IMonthlyClosingRepository>();
+        closingRepositoryMock
+            .Setup(x => x.GetActiveByYearMonthAsync(2026, 5))
+            .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
+        closingRepositoryMock
+            .Setup(x => x.GetLatestByYearMonthAsync(2026, 5))
+            .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
 
         var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
 
@@ -169,6 +187,12 @@ public class CreateMonthlyClosingUseCaseTests
             ]);
 
         var closingRepositoryMock = new Mock<IMonthlyClosingRepository>();
+        closingRepositoryMock
+            .Setup(x => x.GetActiveByYearMonthAsync(2026, 5))
+            .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
+        closingRepositoryMock
+            .Setup(x => x.GetLatestByYearMonthAsync(2026, 5))
+            .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
         var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
 
         var result = await useCase.ExecuteAsync(
@@ -207,7 +231,7 @@ public class CreateMonthlyClosingUseCaseTests
 
         var closingRepositoryMock = new Mock<IMonthlyClosingRepository>();
         closingRepositoryMock
-            .Setup(x => x.GetByYearMonthAsync(2026, 5))
+            .Setup(x => x.GetActiveByYearMonthAsync(2026, 5))
             .ReturnsAsync(new Domain.Entities.MonthlyClosing
             {
                 Id = Guid.NewGuid(),
@@ -232,6 +256,64 @@ public class CreateMonthlyClosingUseCaseTests
 
         await action.Should().ThrowAsync<InvalidOperationException>();
         accountRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Account>()), Times.Never);
+        closingRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<Domain.Entities.MonthlyClosing>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateMonthlyClosing_AfterReopen_ShouldReuseExistingDocument()
+    {
+        var accountOneId = Guid.NewGuid();
+        var reopenedClosingId = Guid.NewGuid();
+
+        var accountRepositoryMock = new Mock<IAccountRepository>();
+        accountRepositoryMock
+            .Setup(x => x.GetAllAsync(2026, 5))
+            .ReturnsAsync(
+            [
+                new Account
+                {
+                    Id = accountOneId,
+                    Name = "Rent",
+                    Amount = 1000m,
+                    DueDate = new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc),
+                    Paid = false,
+                    ParticipatesInDivision = true,
+                },
+            ]);
+
+        var reopenedClosing = new Domain.Entities.MonthlyClosing
+        {
+            Id = reopenedClosingId,
+            Year = 2026,
+            Month = 5,
+            ClosedAtUtc = DateTime.UtcNow.AddDays(-1),
+            ReopenedAtUtc = DateTime.UtcNow,
+            AccountIds = [accountOneId],
+            Participants = ["Ana"],
+            TotalAmount = 1000m,
+            AmountPerPerson = 1000m,
+        };
+
+        var closingRepositoryMock = new Mock<IMonthlyClosingRepository>();
+        closingRepositoryMock
+            .Setup(x => x.GetActiveByYearMonthAsync(2026, 5))
+            .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
+        closingRepositoryMock
+            .Setup(x => x.GetLatestByYearMonthAsync(2026, 5))
+            .ReturnsAsync(reopenedClosing);
+
+        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
+
+        var result = await useCase.ExecuteAsync(
+            new CreateMonthlyClosingRequest(
+                Year: 2026,
+                Month: 5,
+                AccountIds: [],
+                Participants: ["Ana", "Bruno"]));
+
+        result.Id.Should().Be(reopenedClosingId);
+        closingRepositoryMock.Verify(x => x.UpdateAsync(It.Is<Domain.Entities.MonthlyClosing>(c =>
+            c.Id == reopenedClosingId && c.ReopenedAtUtc == null)), Times.Once);
         closingRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<Domain.Entities.MonthlyClosing>()), Times.Never);
     }
 }

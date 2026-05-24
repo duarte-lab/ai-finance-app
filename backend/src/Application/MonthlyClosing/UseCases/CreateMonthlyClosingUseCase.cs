@@ -46,11 +46,13 @@ public class CreateMonthlyClosingUseCase
             throw new ArgumentException("At least one participant is required.");
         }
 
-        var existingClosing = await _monthlyClosingRepository.GetByYearMonthAsync(request.Year, request.Month);
+        var existingClosing = await _monthlyClosingRepository.GetActiveByYearMonthAsync(request.Year, request.Month);
         if (existingClosing is not null)
         {
             throw new InvalidOperationException("Selected month is already closed. Reopen it before closing again.");
         }
+
+        var latestClosing = await _monthlyClosingRepository.GetLatestByYearMonthAsync(request.Year, request.Month);
 
         var monthAccounts = await _accountRepository.GetAllAsync(request.Year, request.Month);
         var monthLookup = monthAccounts.ToDictionary(account => account.Id, account => account);
@@ -82,18 +84,33 @@ public class CreateMonthlyClosingUseCase
             2,
             MidpointRounding.AwayFromZero);
 
-        var closing = new Domain.Entities.MonthlyClosing
+        var shouldReuseLatestClosing = latestClosing is not null && latestClosing.ReopenedAtUtc is not null;
+
+        Domain.Entities.MonthlyClosing closing;
+        if (shouldReuseLatestClosing)
         {
-            Id = Guid.NewGuid(),
-            Year = request.Year,
-            Month = request.Month,
-            ClosedAtUtc = DateTime.UtcNow,
-            ReopenedAtUtc = null,
-            AccountIds = selectedAccounts.Select(account => account.Id).ToList(),
-            Participants = participants,
-            TotalAmount = totalAmount,
-            AmountPerPerson = amountPerPerson,
-        };
+            closing = latestClosing!;
+        }
+        else
+        {
+            closing = new Domain.Entities.MonthlyClosing
+            {
+                Id = Guid.NewGuid(),
+                Year = request.Year,
+                Month = request.Month,
+                AccountIds = [],
+                Participants = [],
+            };
+        }
+
+        closing.Year = request.Year;
+        closing.Month = request.Month;
+        closing.ClosedAtUtc = DateTime.UtcNow;
+        closing.ReopenedAtUtc = null;
+        closing.AccountIds = selectedAccounts.Select(account => account.Id).ToList();
+        closing.Participants = participants;
+        closing.TotalAmount = totalAmount;
+        closing.AmountPerPerson = amountPerPerson;
 
         foreach (var account in selectedAccounts)
         {
@@ -101,7 +118,14 @@ public class CreateMonthlyClosingUseCase
             await _accountRepository.UpdateAsync(account);
         }
 
-        await _monthlyClosingRepository.CreateAsync(closing);
+        if (shouldReuseLatestClosing)
+        {
+            await _monthlyClosingRepository.UpdateAsync(closing);
+        }
+        else
+        {
+            await _monthlyClosingRepository.CreateAsync(closing);
+        }
 
         return new MonthlyClosingResponse(
             Id: closing.Id,

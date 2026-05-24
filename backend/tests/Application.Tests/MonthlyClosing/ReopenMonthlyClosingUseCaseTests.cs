@@ -55,7 +55,7 @@ public class ReopenMonthlyClosingUseCaseTests
 
         var closingRepositoryMock = new Mock<IMonthlyClosingRepository>();
         closingRepositoryMock
-            .Setup(x => x.GetByYearMonthAsync(2026, 5))
+            .Setup(x => x.GetActiveByYearMonthAsync(2026, 5))
             .ReturnsAsync(closing);
 
         var useCase = new ReopenMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
@@ -79,7 +79,7 @@ public class ReopenMonthlyClosingUseCaseTests
 
         var closingRepositoryMock = new Mock<IMonthlyClosingRepository>();
         closingRepositoryMock
-            .Setup(x => x.GetByYearMonthAsync(2026, 5))
+            .Setup(x => x.GetActiveByYearMonthAsync(2026, 5))
             .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
 
         var useCase = new ReopenMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);

@@ -24,7 +24,7 @@ public class GetMonthlyClosingUseCase
             throw new ArgumentException("Month must be between 1 and 12.");
         }
 
-        var closing = await _monthlyClosingRepository.GetByYearMonthAsync(year, month);
+        var closing = await _monthlyClosingRepository.GetActiveByYearMonthAsync(year, month);
         if (closing is null)
         {
             return null;

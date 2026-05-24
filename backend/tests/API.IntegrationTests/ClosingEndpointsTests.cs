@@ -266,4 +266,52 @@ public class ClosingEndpointsTests : IClassFixture<CustomWebApplicationFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, secondClose.StatusCode);
     }
+
+    [Fact]
+    public async Task RecloseAfterReopen_ShouldReuseSameClosingDocument()
+    {
+        var (year, month) = BuildUniquePeriod();
+
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/accounts",
+            new CreateAccountRequest(
+                Name: "Rent",
+                Amount: 1000m,
+                DueDate: new DateTime(year, month, 10, 0, 0, 0, DateTimeKind.Utc),
+                ParticipatesInDivision: true));
+
+        createResponse.EnsureSuccessStatusCode();
+
+        var firstCloseResponse = await _client.PostAsJsonAsync(
+            "/closing",
+            new CreateMonthlyClosingRequest(
+                Year: year,
+                Month: month,
+                AccountIds: [],
+                Participants: ["Ana", "Bruno"]));
+
+        firstCloseResponse.EnsureSuccessStatusCode();
+        var firstClosing = await firstCloseResponse.Content.ReadFromJsonAsync<MonthlyClosingResponse>();
+        Assert.NotNull(firstClosing);
+
+        var reopenResponse = await _client.PostAsJsonAsync(
+            "/closing/reopen",
+            new ReopenMonthlyClosingRequest(year, month));
+
+        reopenResponse.EnsureSuccessStatusCode();
+
+        var secondCloseResponse = await _client.PostAsJsonAsync(
+            "/closing",
+            new CreateMonthlyClosingRequest(
+                Year: year,
+                Month: month,
+                AccountIds: [],
+                Participants: ["Ana", "Bruno"]));
+
+        secondCloseResponse.EnsureSuccessStatusCode();
+        var secondClosing = await secondCloseResponse.Content.ReadFromJsonAsync<MonthlyClosingResponse>();
+        Assert.NotNull(secondClosing);
+
+        Assert.Equal(firstClosing!.Id, secondClosing!.Id);
+    }
 }

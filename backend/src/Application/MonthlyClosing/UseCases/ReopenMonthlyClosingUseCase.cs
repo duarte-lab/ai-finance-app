@@ -29,7 +29,7 @@ public class ReopenMonthlyClosingUseCase
             throw new ArgumentException("Month must be between 1 and 12.");
         }
 
-        var closing = await _monthlyClosingRepository.GetByYearMonthAsync(request.Year, request.Month);
+        var closing = await _monthlyClosingRepository.GetActiveByYearMonthAsync(request.Year, request.Month);
         if (closing is null)
         {
             throw new InvalidOperationException("No active closing found for selected month.");
