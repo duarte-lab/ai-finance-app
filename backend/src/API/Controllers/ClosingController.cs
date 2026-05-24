@@ -8,15 +8,32 @@ namespace Api.Controllers;
 [Route("closing")]
 public class ClosingController : ControllerBase
 {
+    private readonly GetMonthlyClosingUseCase _getMonthlyClosingUseCase;
     private readonly CreateMonthlyClosingUseCase _createMonthlyClosingUseCase;
     private readonly ReopenMonthlyClosingUseCase _reopenMonthlyClosingUseCase;
 
     public ClosingController(
+        GetMonthlyClosingUseCase getMonthlyClosingUseCase,
         CreateMonthlyClosingUseCase createMonthlyClosingUseCase,
         ReopenMonthlyClosingUseCase reopenMonthlyClosingUseCase)
     {
+        _getMonthlyClosingUseCase = getMonthlyClosingUseCase;
         _createMonthlyClosingUseCase = createMonthlyClosingUseCase;
         _reopenMonthlyClosingUseCase = reopenMonthlyClosingUseCase;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Get([FromQuery] int year, [FromQuery] int month)
+    {
+        try
+        {
+            var result = await _getMonthlyClosingUseCase.ExecuteAsync(year, month);
+            return result is null ? NotFound() : Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPost]

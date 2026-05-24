@@ -195,4 +195,75 @@ public class ClosingEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(150m, payload!.TotalAmount);
         Assert.Equal(1, payload.AccountCount);
     }
+
+    [Fact]
+    public async Task GetClosing_WhenMonthIsClosed_ShouldReturnCurrentClosing()
+    {
+        var (year, month) = BuildUniquePeriod();
+
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/accounts",
+            new CreateAccountRequest(
+                Name: "Rent",
+                Amount: 1000m,
+                DueDate: new DateTime(year, month, 10, 0, 0, 0, DateTimeKind.Utc),
+                ParticipatesInDivision: true));
+
+        createResponse.EnsureSuccessStatusCode();
+
+        var closeResponse = await _client.PostAsJsonAsync(
+            "/closing",
+            new CreateMonthlyClosingRequest(
+                Year: year,
+                Month: month,
+                AccountIds: [],
+                Participants: ["Ana", "Bruno"]));
+
+        closeResponse.EnsureSuccessStatusCode();
+
+        var getResponse = await _client.GetAsync($"/closing?year={year}&month={month}");
+
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+
+        var payload = await getResponse.Content.ReadFromJsonAsync<MonthlyClosingResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal(2, payload!.ParticipantCount);
+        Assert.Equal(["Ana", "Bruno"], payload.Participants);
+    }
+
+    [Fact]
+    public async Task CreateClosing_WhenMonthAlreadyClosed_ShouldReturnBadRequest()
+    {
+        var (year, month) = BuildUniquePeriod();
+
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/accounts",
+            new CreateAccountRequest(
+                Name: "Rent",
+                Amount: 1000m,
+                DueDate: new DateTime(year, month, 10, 0, 0, 0, DateTimeKind.Utc),
+                ParticipatesInDivision: true));
+
+        createResponse.EnsureSuccessStatusCode();
+
+        var firstClose = await _client.PostAsJsonAsync(
+            "/closing",
+            new CreateMonthlyClosingRequest(
+                Year: year,
+                Month: month,
+                AccountIds: [],
+                Participants: ["Ana", "Bruno"]));
+
+        firstClose.EnsureSuccessStatusCode();
+
+        var secondClose = await _client.PostAsJsonAsync(
+            "/closing",
+            new CreateMonthlyClosingRequest(
+                Year: year,
+                Month: month,
+                AccountIds: [],
+                Participants: ["Ana", "Bruno"]));
+
+        Assert.Equal(HttpStatusCode.BadRequest, secondClose.StatusCode);
+    }
 }

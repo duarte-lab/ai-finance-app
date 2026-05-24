@@ -46,6 +46,12 @@ public class CreateMonthlyClosingUseCase
             throw new ArgumentException("At least one participant is required.");
         }
 
+        var existingClosing = await _monthlyClosingRepository.GetByYearMonthAsync(request.Year, request.Month);
+        if (existingClosing is not null)
+        {
+            throw new InvalidOperationException("Selected month is already closed. Reopen it before closing again.");
+        }
+
         var monthAccounts = await _accountRepository.GetAllAsync(request.Year, request.Month);
         var monthLookup = monthAccounts.ToDictionary(account => account.Id, account => account);
 
@@ -107,6 +113,7 @@ public class CreateMonthlyClosingUseCase
             ParticipantCount: closing.Participants.Count,
             ClosedAtUtc: closing.ClosedAtUtc,
             IsReopened: false,
-            ReopenedAtUtc: null);
+            ReopenedAtUtc: null,
+            Participants: closing.Participants.ToList());
     }
 }

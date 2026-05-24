@@ -62,6 +62,7 @@ public class ReopenMonthlyClosingUseCase
             ParticipantCount: closing.Participants.Count,
             ClosedAtUtc: closing.ClosedAtUtc,
             IsReopened: true,
-            ReopenedAtUtc: closing.ReopenedAtUtc);
+            ReopenedAtUtc: closing.ReopenedAtUtc,
+            Participants: closing.Participants.ToList());
     }
 }

@@ -10,6 +10,7 @@ public record MonthlyClosingResponse(
     int ParticipantCount,
     DateTime ClosedAtUtc,
     bool IsReopened = false,
-    DateTime? ReopenedAtUtc = null);
+    DateTime? ReopenedAtUtc = null,
+    IReadOnlyCollection<string>? Participants = null);
 
 public record ReopenMonthlyClosingRequest(int Year, int Month);
