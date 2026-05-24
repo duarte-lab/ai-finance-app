@@ -5,16 +5,18 @@ Fechar o mês e dividir despesas.
 
 ## Requisitos
 - Selecionar contas do mês
-- Escolher participantes
+- Carregar participantes da lista de pessoas
 - Calcular divisão
 
 ## Regras
 - Todas as contas marcadas como participantes da divisão entram na conta
 - As contas que não foram marcadas devem aparecer para dar a opção de incluir na divisão
 - Divisão igualitária inicialmente
-- Registrar histórico
-- Marcar todas as contas como pagas ao fechar o mês.
+- Registrar o fechamento uma única vez
+- Desabilitar o botão de fechamento quando o mês estiver fechado
+- Marcar todas as contas como pagas ao fechar o mês
 - Permitir reabertura do mês
+- Exibir o painel de mês fechado com o calculo da divisão pelas pessoas
 
 ## Backend
 - Endpoint POST /closing
