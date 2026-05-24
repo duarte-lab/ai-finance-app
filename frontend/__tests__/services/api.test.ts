@@ -38,7 +38,6 @@ describe("services/api", () => {
         createdAtUtc: "2026-04-01T00:00:00Z",
         paid: false,
         participatesInDivision: false,
-        participants: [],
       },
     ];
 
@@ -65,7 +64,6 @@ describe("services/api", () => {
       createdAtUtc: "2026-04-01T00:00:00Z",
       paid: true,
       participatesInDivision: false,
-      participants: [],
     };
 
     (global.fetch as jest.Mock).mockResolvedValue({
@@ -91,7 +89,6 @@ describe("services/api", () => {
       createdAtUtc: "2026-04-01T00:00:00Z",
       paid: false,
       participatesInDivision: false,
-      participants: [],
     };
 
     (global.fetch as jest.Mock).mockResolvedValue({
@@ -104,7 +101,6 @@ describe("services/api", () => {
       amount: 99.9,
       dueDate: "2026-05-05T00:00:00Z",
       participatesInDivision: false,
-      participants: [],
     });
 
     expect(result).toEqual(payload);
@@ -123,7 +119,6 @@ describe("services/api", () => {
       createdAtUtc: "2026-04-01T00:00:00Z",
       paid: false,
       participatesInDivision: true,
-      participants: [],
     };
 
     (global.fetch as jest.Mock).mockResolvedValue({
@@ -137,7 +132,6 @@ describe("services/api", () => {
       dueDate: "2026-05-05T00:00:00Z",
       paid: false,
       participatesInDivision: true,
-      participants: [],
     });
 
     expect(result).toEqual(payload);
@@ -156,7 +150,6 @@ describe("services/api", () => {
       createdAtUtc: "2026-04-01T00:00:00Z",
       paid: false,
       participatesInDivision: true,
-      participants: [],
     };
 
     (global.fetch as jest.Mock).mockResolvedValue({

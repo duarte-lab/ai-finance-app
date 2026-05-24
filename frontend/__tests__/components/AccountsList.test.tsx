@@ -23,7 +23,6 @@ describe("AccountsList", () => {
       createdAtUtc: "2026-04-01T00:00:00Z",
       paid: false,
       participatesInDivision: false,
-      participants: [],
     },
   ];
 
@@ -73,7 +72,6 @@ describe("AccountsList", () => {
       createdAtUtc: "2026-05-01T00:00:00Z",
       paid: false,
       participatesInDivision: false,
-      participants: [],
     });
 
     render(<AccountsList initialAccounts={initialAccounts} initialYear={2026} initialMonth={5} />);

@@ -20,7 +20,6 @@ describe("MonthlyClosingView", () => {
       createdAtUtc: "2026-04-01T00:00:00Z",
       paid: false,
       participatesInDivision: true,
-      participants: [],
     },
     {
       id: "account-2",
@@ -30,7 +29,6 @@ describe("MonthlyClosingView", () => {
       createdAtUtc: "2026-04-01T00:00:00Z",
       paid: false,
       participatesInDivision: false,
-      participants: [],
     },
   ];
 
@@ -146,7 +144,6 @@ describe("MonthlyClosingView", () => {
         createdAtUtc: "2026-04-01T00:00:00Z",
         paid: true,
         participatesInDivision: false,
-        participants: [],
       },
     ]);
 
@@ -185,7 +182,6 @@ describe("MonthlyClosingView", () => {
             createdAtUtc: "2026-04-01T00:00:00Z",
             paid: true,
             participatesInDivision: true,
-            participants: [],
           },
         ]}
         initialPeople={initialPeople}

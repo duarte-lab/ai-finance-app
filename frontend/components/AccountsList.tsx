@@ -125,10 +125,6 @@ export function AccountsList({
     }
   }
 
-  function getPersonName(personId: string): string {
-    return people.find((item) => item.id === personId)?.name ?? personId;
-  }
-
   function startEditing(account: Account) {
     setEditingAccountId(account.id);
     setEditName(account.name);
@@ -146,7 +142,6 @@ export function AccountsList({
         dueDate: new Date(`${editDueDate}T00:00:00.000Z`).toISOString(),
         paid: account.paid,
         participatesInDivision: account.participatesInDivision,
-        participants: account.participants,
       });
 
       setAccounts((prev) => prev.map((item) => (item.id === account.id ? updated : item)));
@@ -294,11 +289,6 @@ export function AccountsList({
                 <span className="text-sm text-slate-600">
                   Divisao mensal: {account.participatesInDivision ? "Participa" : "Nao participa"}
                 </span>
-                {account.participants.length > 0 && (
-                  <span className="text-sm text-slate-600">
-                    Participantes: {account.participants.map((item) => getPersonName(item.personId)).join(", ")}
-                  </span>
-                )}
 
                 {editingAccountId === account.id && (
                   <div className="mt-2 grid gap-2 md:grid-cols-3">

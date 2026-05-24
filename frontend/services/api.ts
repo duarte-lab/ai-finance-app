@@ -14,11 +14,6 @@ export interface Account {
   createdAtUtc: string;
   paid: boolean;
   participatesInDivision: boolean;
-  participants: AccountParticipant[];
-}
-
-export interface AccountParticipant {
-  personId: string;
 }
 
 export interface Person {
@@ -32,7 +27,6 @@ export interface CreateAccountRequest {
   amount: number;
   dueDate: string;
   participatesInDivision?: boolean;
-  participants?: AccountParticipant[];
 }
 
 export interface UpdateAccountRequest {
@@ -41,7 +35,6 @@ export interface UpdateAccountRequest {
   dueDate: string;
   paid: boolean;
   participatesInDivision: boolean;
-  participants?: AccountParticipant[];
 }
 
 export interface DashboardCategoryPoint {
