@@ -9,13 +9,13 @@ export default function Home() {
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-14 md:py-20">
         <div className="max-w-3xl rounded-2xl border border-slate-200/70 bg-white/80 p-6 backdrop-blur md:p-8">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Navegacao do sistema
+            Controle financeiro domestico
           </p>
           <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
-            Menu inicial para acessar todas as funcionalidades
+            Organize contas da casa, participantes e fechamento mensal em um unico lugar
           </h1>
           <p className="mt-3 text-slate-600">
-            Centralize o uso da aplicacao por atalhos. Cada card leva direto para a funcao desejada.
+            Use os atalhos abaixo para acompanhar o dashboard, gerenciar contas, manter pessoas cadastradas e concluir o fechamento do mes com divisao por participante.
           </p>
         </div>
 
