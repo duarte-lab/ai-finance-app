@@ -1,4 +1,5 @@
 using Application.Accounts.DTOs;
+using Application.People.Interfaces;
 using Domain.Entities;
 
 namespace Application.Accounts.UseCases;
@@ -71,5 +72,21 @@ internal static class AccountRules
                 Percentage = x.Percentage,
             })
             .ToList();
+    }
+
+    public static async Task ValidateParticipantsExistAsync(
+        IPersonRepository personRepository,
+        IReadOnlyCollection<AccountParticipant> participants)
+    {
+        if (participants.Count == 0)
+        {
+            return;
+        }
+
+        var people = await personRepository.GetByIdsAsync(participants.Select(x => x.PersonId).ToList());
+        if (people.Count != participants.Count)
+        {
+            throw new ArgumentException("All participants must reference existing people.", nameof(participants));
+        }
     }
 }

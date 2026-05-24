@@ -1,16 +1,17 @@
 using Application.Accounts.DTOs;
 using Application.Accounts.Interfaces;
+using Application.People.Interfaces;
 
 namespace Application.Accounts.UseCases;
 
 public class UpdateAccountUseCase
 {
     private readonly IAccountRepository _repository;
-    private readonly Application.People.Interfaces.IPersonRepository _personRepository;
+    private readonly IPersonRepository _personRepository;
 
     public UpdateAccountUseCase(
         IAccountRepository repository,
-        Application.People.Interfaces.IPersonRepository personRepository)
+        IPersonRepository personRepository)
     {
         _repository = repository;
         _personRepository = personRepository;
@@ -21,15 +22,7 @@ public class UpdateAccountUseCase
         AccountRules.ValidateName(request.Name);
         AccountRules.ValidateAmount(request.Amount);
         var participants = AccountRules.BuildParticipants(request.Participants);
-
-        if (participants.Count > 0)
-        {
-            var people = await _personRepository.GetByIdsAsync(participants.Select(x => x.PersonId).ToList());
-            if (people.Count != participants.Count)
-            {
-                throw new ArgumentException("All participants must reference existing people.", nameof(request));
-            }
-        }
+        await AccountRules.ValidateParticipantsExistAsync(_personRepository, participants);
 
         var account = await _repository.GetByIdAsync(id);
         if (account is null)

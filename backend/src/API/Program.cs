@@ -15,6 +15,19 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+var jwtSigningKey = builder.Configuration["Jwt:SigningKey"];
+
+if (string.IsNullOrWhiteSpace(jwtSigningKey))
+{
+    if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing"))
+    {
+        jwtSigningKey = "DEV_TEST_SIGNING_KEY_CHANGE_ME_123456789";
+    }
+    else
+    {
+        throw new InvalidOperationException("Jwt:SigningKey is required outside Development/Testing.");
+    }
+}
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -64,7 +77,7 @@ builder.Services.AddAuthentication("Bearer")
             ValidateIssuerSigningKey = true,
             IssuerSigningKey =
                 new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes("SUPER_SECRET_KEY_123"))
+                    Encoding.UTF8.GetBytes(jwtSigningKey))
         };
     });
 
@@ -77,6 +90,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("FrontendPolicy");
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

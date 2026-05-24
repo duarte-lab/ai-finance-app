@@ -49,6 +49,22 @@ public class AccountsUseCasesTests
     }
 
     [Fact]
+    public async Task CreateAccount_RetroactiveDueDate_ShouldAllowCreation()
+    {
+        var repositoryMock = new Mock<IAccountRepository>();
+        var personRepositoryMock = new Mock<IPersonRepository>();
+        var useCase = new CreateAccountUseCase(repositoryMock.Object, personRepositoryMock.Object);
+        var pastDueDate = DateTime.UtcNow.AddDays(-30);
+
+        var result = await useCase.ExecuteAsync(new CreateAccountRequest("Past bill", 50m, pastDueDate));
+
+        result.Name.Should().Be("Past bill");
+        result.DueDate.Should().Be(pastDueDate);
+        result.Paid.Should().BeFalse();
+        repositoryMock.Verify(x => x.CreateAsync(It.IsAny<Account>()), Times.Once);
+    }
+
+    [Fact]
     public async Task CreateAccount_WithDuplicateParticipant_ShouldThrowArgumentException()
     {
         var personId = Guid.NewGuid();

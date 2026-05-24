@@ -102,4 +102,17 @@ public class AccountsEndpointsTests : IClassFixture<CustomWebApplicationFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Fact]
+    public async Task CreateAccount_WithNegativeAmount_ShouldReturnBadRequest()
+    {
+        var request = new CreateAccountRequest(
+            "Invalid account",
+            -10m,
+            new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc));
+
+        var response = await _client.PostAsJsonAsync("/api/accounts", request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }
