@@ -1,4 +1,4 @@
-# Feature: Home page
+# Feature: Home
 
 ## Objetivo
 Controlar os caminhos da aplicação, mantendo atalhos, navbar, menu lateral e qualquer outra forma de navegação do frontend.
