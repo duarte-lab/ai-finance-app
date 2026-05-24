@@ -16,6 +16,7 @@ describe("MonthlyClosingView", () => {
       amount: 1000,
       dueDate: "2026-05-10T00:00:00Z",
       paid: false,
+      participants: [],
     },
     {
       id: "account-2",
@@ -23,6 +24,7 @@ describe("MonthlyClosingView", () => {
       amount: 500,
       dueDate: "2026-05-11T00:00:00Z",
       paid: false,
+      participants: [],
     },
   ];
 
@@ -72,6 +74,7 @@ describe("MonthlyClosingView", () => {
         amount: 120,
         dueDate: "2026-06-03T00:00:00Z",
         paid: false,
+        participants: [],
       },
     ]);
 

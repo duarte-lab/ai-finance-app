@@ -1,8 +1,10 @@
 import {
+  createPerson,
   createMonthlyClosing,
   createAccount,
   getAccounts,
   getDashboardSummary,
+  getPeople,
   markAccountAsPaid,
 } from "@/services/api";
 
@@ -23,7 +25,7 @@ describe("services/api", () => {
 
   it("getAccounts should request with month filter and return data", async () => {
     const payload = [
-      { id: "1", name: "Internet", amount: 120.5, dueDate: "2026-05-01T00:00:00Z", paid: false },
+      { id: "1", name: "Internet", amount: 120.5, dueDate: "2026-05-01T00:00:00Z", paid: false, participants: [] },
     ];
 
     (global.fetch as jest.Mock).mockResolvedValue({
@@ -41,7 +43,7 @@ describe("services/api", () => {
   });
 
   it("markAccountAsPaid should call patch endpoint", async () => {
-    const payload = { id: "1", name: "Internet", amount: 120.5, dueDate: "2026-05-01T00:00:00Z", paid: true };
+    const payload = { id: "1", name: "Internet", amount: 120.5, dueDate: "2026-05-01T00:00:00Z", paid: true, participants: [] };
 
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
@@ -58,7 +60,7 @@ describe("services/api", () => {
   });
 
   it("createAccount should call post endpoint", async () => {
-    const payload = { id: "2", name: "Water", amount: 99.9, dueDate: "2026-05-05T00:00:00Z", paid: false };
+    const payload = { id: "2", name: "Water", amount: 99.9, dueDate: "2026-05-05T00:00:00Z", paid: false, participants: [] };
 
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
@@ -69,6 +71,7 @@ describe("services/api", () => {
       name: "Water",
       amount: 99.9,
       dueDate: "2026-05-05T00:00:00Z",
+      participants: [],
     });
 
     expect(result).toEqual(payload);
@@ -135,6 +138,40 @@ describe("services/api", () => {
     expect(result).toEqual(payload);
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/closing"),
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("getPeople should call people endpoint", async () => {
+    const payload = [{ id: "person-1", name: "Ana", createdAtUtc: "2026-05-05T00:00:00Z" }];
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => payload,
+    });
+
+    const result = await getPeople();
+
+    expect(result).toEqual(payload);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/people"),
+      { cache: "no-store" },
+    );
+  });
+
+  it("createPerson should call people post endpoint", async () => {
+    const payload = { id: "person-2", name: "Bruno", createdAtUtc: "2026-05-05T00:00:00Z" };
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => payload,
+    });
+
+    const result = await createPerson("Bruno");
+
+    expect(result).toEqual(payload);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/people"),
       expect.objectContaining({ method: "POST" }),
     );
   });

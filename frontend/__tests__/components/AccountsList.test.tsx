@@ -7,6 +7,8 @@ jest.mock("@/services/api", () => ({
   getAccounts: jest.fn(),
   markAccountAsPaid: jest.fn(),
   createAccount: jest.fn(),
+  getPeople: jest.fn(),
+  createPerson: jest.fn(),
 }));
 
 describe("AccountsList", () => {
@@ -17,8 +19,13 @@ describe("AccountsList", () => {
       amount: 1800,
       dueDate: "2026-05-10T00:00:00Z",
       paid: false,
+      participants: [],
     },
   ];
+
+  beforeEach(() => {
+    (api.getPeople as jest.Mock).mockResolvedValue([]);
+  });
 
   it("shows accounts and marks an account as paid", async () => {
     (api.markAccountAsPaid as jest.Mock).mockResolvedValue({
@@ -59,6 +66,7 @@ describe("AccountsList", () => {
       amount: 90,
       dueDate: "2026-05-22T00:00:00Z",
       paid: false,
+      participants: [],
     });
 
     render(<AccountsList initialAccounts={initialAccounts} initialYear={2026} initialMonth={5} />);
@@ -71,6 +79,24 @@ describe("AccountsList", () => {
     await waitFor(() => {
       expect(api.createAccount).toHaveBeenCalledTimes(1);
       expect(screen.getByText("Water")).toBeInTheDocument();
+    });
+  });
+
+  it("creates a person", async () => {
+    (api.createPerson as jest.Mock).mockResolvedValue({
+      id: "person-1",
+      name: "Ana",
+      createdAtUtc: "2026-05-01T00:00:00Z",
+    });
+
+    render(<AccountsList initialAccounts={initialAccounts} initialYear={2026} initialMonth={5} />);
+
+    fireEvent.change(screen.getByLabelText("Nome da pessoa"), { target: { value: "Ana" } });
+    fireEvent.click(screen.getByRole("button", { name: "Cadastrar pessoa" }));
+
+    await waitFor(() => {
+      expect(api.createPerson).toHaveBeenCalledWith("Ana");
+      expect(screen.getByText("1 pessoa(s) cadastrada(s)")).toBeInTheDocument();
     });
   });
 });

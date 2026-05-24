@@ -12,12 +12,25 @@ export interface Account {
   amount: number;
   dueDate: string;
   paid: boolean;
+  participants: AccountParticipant[];
+}
+
+export interface AccountParticipant {
+  personId: string;
+  percentage: number;
+}
+
+export interface Person {
+  id: string;
+  name: string;
+  createdAtUtc: string;
 }
 
 export interface CreateAccountRequest {
   name: string;
   amount: number;
   dueDate: string;
+  participants?: AccountParticipant[];
 }
 
 export interface DashboardCategoryPoint {
@@ -103,6 +116,30 @@ export async function createAccount(request: CreateAccountRequest): Promise<Acco
   }
 
   return (await res.json()) as Account;
+}
+
+export async function getPeople(): Promise<Person[]> {
+  const res = await fetch(`${getApiBaseUrl()}/api/people`, { cache: "no-store" });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch people: ${res.status}`);
+  }
+
+  return (await res.json()) as Person[];
+}
+
+export async function createPerson(name: string): Promise<Person> {
+  const res = await fetch(`${getApiBaseUrl()}/api/people`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to create person: ${res.status}`);
+  }
+
+  return (await res.json()) as Person;
 }
 
 export async function getDashboardSummary(
