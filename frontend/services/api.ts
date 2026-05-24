@@ -70,6 +70,11 @@ export interface CreateMonthlyClosingRequest {
   participants: string[];
 }
 
+export interface ReopenMonthlyClosingRequest {
+  year: number;
+  month: number;
+}
+
 export interface MonthlyClosingResult {
   id: string;
   year: number;
@@ -79,6 +84,8 @@ export interface MonthlyClosingResult {
   accountCount: number;
   participantCount: number;
   closedAtUtc: string;
+  isReopened: boolean;
+  reopenedAtUtc?: string;
 }
 
 export type NotificationType = "DueInThreeDays" | "DueToday";
@@ -229,6 +236,22 @@ export async function createMonthlyClosing(
 
   if (!res.ok) {
     throw new Error(`Failed to create monthly closing: ${res.status}`);
+  }
+
+  return (await res.json()) as MonthlyClosingResult;
+}
+
+export async function reopenMonthlyClosing(
+  request: ReopenMonthlyClosingRequest,
+): Promise<MonthlyClosingResult> {
+  const res = await fetch(`${getApiBaseUrl()}/closing/reopen`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to reopen monthly closing: ${res.status}`);
   }
 
   return (await res.json()) as MonthlyClosingResult;

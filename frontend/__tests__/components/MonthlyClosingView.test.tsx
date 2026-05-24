@@ -6,6 +6,7 @@ jest.mock("@/services/api", () => ({
   ...jest.requireActual("@/services/api"),
   getAccounts: jest.fn(),
   createMonthlyClosing: jest.fn(),
+  reopenMonthlyClosing: jest.fn(),
 }));
 
 describe("MonthlyClosingView", () => {
@@ -17,7 +18,7 @@ describe("MonthlyClosingView", () => {
       dueDate: "2026-05-10T00:00:00Z",
       createdAtUtc: "2026-04-01T00:00:00Z",
       paid: false,
-      participatesInDivision: false,
+      participatesInDivision: true,
       participants: [],
     },
     {
@@ -42,7 +43,11 @@ describe("MonthlyClosingView", () => {
       accountCount: 2,
       participantCount: 2,
       closedAtUtc: "2026-05-20T00:00:00Z",
+      isReopened: false,
+      reopenedAtUtc: null,
     });
+
+    (api.getAccounts as jest.Mock).mockResolvedValue([]);
 
     render(
       <MonthlyClosingView
@@ -52,7 +57,6 @@ describe("MonthlyClosingView", () => {
       />,
     );
 
-    fireEvent.click(screen.getByLabelText(/selecionar conta rent/i));
     fireEvent.click(screen.getByLabelText(/selecionar conta internet/i));
     fireEvent.change(screen.getByLabelText(/participantes do fechamento/i), {
       target: { value: "Ana, Bruno" },
@@ -67,6 +71,38 @@ describe("MonthlyClosingView", () => {
         participants: ["Ana", "Bruno"],
       });
       expect(screen.getByText(/resultado do fechamento/i)).toBeInTheDocument();
+    });
+  });
+
+  it("reopens monthly closing and renders reopened status", async () => {
+    (api.reopenMonthlyClosing as jest.Mock).mockResolvedValue({
+      id: "closing-1",
+      year: 2026,
+      month: 5,
+      totalAmount: 1500,
+      amountPerPerson: 750,
+      accountCount: 2,
+      participantCount: 2,
+      closedAtUtc: "2026-05-20T00:00:00Z",
+      isReopened: true,
+      reopenedAtUtc: "2026-05-25T00:00:00Z",
+    });
+
+    (api.getAccounts as jest.Mock).mockResolvedValue([]);
+
+    render(
+      <MonthlyClosingView
+        initialAccounts={initialAccounts}
+        initialYear={2026}
+        initialMonth={5}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /reabrir mes/i }));
+
+    await waitFor(() => {
+      expect(api.reopenMonthlyClosing).toHaveBeenCalledWith({ year: 2026, month: 5 });
+      expect(screen.getByText(/mes reaberto/i)).toBeInTheDocument();
     });
   });
 
