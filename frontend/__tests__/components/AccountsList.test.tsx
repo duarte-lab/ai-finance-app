@@ -9,6 +9,8 @@ jest.mock("@/services/api", () => ({
   createAccount: jest.fn(),
   getPeople: jest.fn(),
   createPerson: jest.fn(),
+  updateAccount: jest.fn(),
+  updateAccountDivisionParticipation: jest.fn(),
 }));
 
 describe("AccountsList", () => {
@@ -18,7 +20,9 @@ describe("AccountsList", () => {
       name: "Rent",
       amount: 1800,
       dueDate: "2026-05-10T00:00:00Z",
+      createdAtUtc: "2026-04-01T00:00:00Z",
       paid: false,
+      participatesInDivision: false,
       participants: [],
     },
   ];
@@ -65,7 +69,9 @@ describe("AccountsList", () => {
       name: "Water",
       amount: 90,
       dueDate: "2026-05-22T00:00:00Z",
+      createdAtUtc: "2026-05-01T00:00:00Z",
       paid: false,
+      participatesInDivision: false,
       participants: [],
     });
 
@@ -97,6 +103,42 @@ describe("AccountsList", () => {
     await waitFor(() => {
       expect(api.createPerson).toHaveBeenCalledWith("Ana");
       expect(screen.getByText("1 pessoa(s) cadastrada(s)")).toBeInTheDocument();
+    });
+  });
+
+  it("marks account as participant in division", async () => {
+    (api.updateAccountDivisionParticipation as jest.Mock).mockResolvedValue({
+      ...initialAccounts[0],
+      participatesInDivision: true,
+    });
+
+    render(<AccountsList initialAccounts={initialAccounts} initialYear={2026} initialMonth={5} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Marcar na divisao" }));
+
+    await waitFor(() => {
+      expect(api.updateAccountDivisionParticipation).toHaveBeenCalledWith("account-1", true);
+      expect(screen.getByText(/divisao mensal:\s*participa/i)).toBeInTheDocument();
+    });
+  });
+
+  it("edits an account", async () => {
+    (api.updateAccount as jest.Mock).mockResolvedValue({
+      ...initialAccounts[0],
+      name: "Rent updated",
+    });
+
+    render(<AccountsList initialAccounts={initialAccounts} initialYear={2026} initialMonth={5} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar" }));
+    fireEvent.change(screen.getByLabelText("Editar nome da conta"), {
+      target: { value: "Rent updated" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+
+    await waitFor(() => {
+      expect(api.updateAccount).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("Rent updated")).toBeInTheDocument();
     });
   });
 });

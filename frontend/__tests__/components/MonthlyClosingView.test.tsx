@@ -15,7 +15,9 @@ describe("MonthlyClosingView", () => {
       name: "Rent",
       amount: 1000,
       dueDate: "2026-05-10T00:00:00Z",
+      createdAtUtc: "2026-04-01T00:00:00Z",
       paid: false,
+      participatesInDivision: false,
       participants: [],
     },
     {
@@ -23,7 +25,9 @@ describe("MonthlyClosingView", () => {
       name: "Internet",
       amount: 500,
       dueDate: "2026-05-11T00:00:00Z",
+      createdAtUtc: "2026-04-01T00:00:00Z",
       paid: false,
+      participatesInDivision: false,
       participants: [],
     },
   ];
@@ -73,7 +77,9 @@ describe("MonthlyClosingView", () => {
         name: "Water",
         amount: 120,
         dueDate: "2026-06-03T00:00:00Z",
+        createdAtUtc: "2026-04-01T00:00:00Z",
         paid: false,
+        participatesInDivision: false,
         participants: [],
       },
     ]);

@@ -11,7 +11,9 @@ export interface Account {
   name: string;
   amount: number;
   dueDate: string;
+  createdAtUtc: string;
   paid: boolean;
+  participatesInDivision: boolean;
   participants: AccountParticipant[];
 }
 
@@ -30,6 +32,16 @@ export interface CreateAccountRequest {
   name: string;
   amount: number;
   dueDate: string;
+  participatesInDivision?: boolean;
+  participants?: AccountParticipant[];
+}
+
+export interface UpdateAccountRequest {
+  name: string;
+  amount: number;
+  dueDate: string;
+  paid: boolean;
+  participatesInDivision: boolean;
   participants?: AccountParticipant[];
 }
 
@@ -124,6 +136,37 @@ export async function createAccount(request: CreateAccountRequest): Promise<Acco
 
   if (!res.ok) {
     throw new Error(`Failed to create account: ${res.status}`);
+  }
+
+  return (await res.json()) as Account;
+}
+
+export async function updateAccount(id: string, request: UpdateAccountRequest): Promise<Account> {
+  const res = await fetch(`${getApiBaseUrl()}/api/accounts/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to update account: ${res.status}`);
+  }
+
+  return (await res.json()) as Account;
+}
+
+export async function updateAccountDivisionParticipation(
+  id: string,
+  participatesInDivision: boolean,
+): Promise<Account> {
+  const res = await fetch(`${getApiBaseUrl()}/api/accounts/${id}/division-participation`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ participatesInDivision }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to update account division participation: ${res.status}`);
   }
 
   return (await res.json()) as Account;

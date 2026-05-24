@@ -10,6 +10,8 @@ import {
   getAccounts,
   getPeople,
   markAccountAsPaid,
+  updateAccount,
+  updateAccountDivisionParticipation,
 } from "@/services/api";
 
 interface AccountsListProps {
@@ -31,12 +33,17 @@ export function AccountsList({
   const [payingId, setPayingId] = useState<string | null>(null);
   const [isPeopleLoading, setIsPeopleLoading] = useState(false);
   const [isCreatingPerson, setIsCreatingPerson] = useState(false);
+  const [divisionUpdatingId, setDivisionUpdatingId] = useState<string | null>(null);
+  const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [personName, setPersonName] = useState("");
   const [participants, setParticipants] = useState<AccountParticipant[]>([]);
+  const [editName, setEditName] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editDueDate, setEditDueDate] = useState("");
 
   useEffect(() => {
     void loadPeople();
@@ -147,6 +154,7 @@ export function AccountsList({
         name,
         amount: Number(amount),
         dueDate: new Date(`${dueDate}T00:00:00.000Z`).toISOString(),
+        participatesInDivision: false,
         participants,
       });
 
@@ -162,6 +170,50 @@ export function AccountsList({
 
   function getPersonName(personId: string): string {
     return people.find((item) => item.id === personId)?.name ?? personId;
+  }
+
+  function startEditing(account: Account) {
+    setEditingAccountId(account.id);
+    setEditName(account.name);
+    setEditAmount(String(account.amount));
+    setEditDueDate(new Date(account.dueDate).toISOString().slice(0, 10));
+  }
+
+  async function saveEdit(account: Account) {
+    setError(null);
+
+    try {
+      const updated = await updateAccount(account.id, {
+        name: editName,
+        amount: Number(editAmount),
+        dueDate: new Date(`${editDueDate}T00:00:00.000Z`).toISOString(),
+        paid: account.paid,
+        participatesInDivision: account.participatesInDivision,
+        participants: account.participants,
+      });
+
+      setAccounts((prev) => prev.map((item) => (item.id === account.id ? updated : item)));
+      setEditingAccountId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update account.");
+    }
+  }
+
+  async function toggleDivisionParticipation(account: Account) {
+    setDivisionUpdatingId(account.id);
+    setError(null);
+
+    try {
+      const updated = await updateAccountDivisionParticipation(
+        account.id,
+        !account.participatesInDivision,
+      );
+      setAccounts((prev) => prev.map((item) => (item.id === account.id ? updated : item)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update division participation.");
+    } finally {
+      setDivisionUpdatingId(null);
+    }
   }
 
   return (
@@ -332,10 +384,43 @@ export function AccountsList({
                   Vencimento: {new Date(account.dueDate).toISOString().slice(0, 10)}
                 </span>
                 <span className="text-sm text-slate-700">R$ {account.amount.toFixed(2)}</span>
+                <span className="text-sm text-slate-600">
+                  Criada em: {new Date(account.createdAtUtc).toISOString().slice(0, 10)}
+                </span>
+                <span className="text-sm text-slate-600">
+                  Divisao mensal: {account.participatesInDivision ? "Participa" : "Nao participa"}
+                </span>
                 {account.participants.length > 0 && (
                   <span className="text-sm text-slate-600">
                     Compartilhado: {account.participants.map((item) => `${getPersonName(item.personId)} (${item.percentage}%)`).join(", ")}
                   </span>
+                )}
+
+                {editingAccountId === account.id && (
+                  <div className="mt-2 grid gap-2 md:grid-cols-3">
+                    <input
+                      aria-label="Editar nome da conta"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="rounded-md border border-slate-300 px-2 py-1 text-sm"
+                    />
+                    <input
+                      aria-label="Editar valor da conta"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editAmount}
+                      onChange={(e) => setEditAmount(e.target.value)}
+                      className="rounded-md border border-slate-300 px-2 py-1 text-sm"
+                    />
+                    <input
+                      aria-label="Editar vencimento da conta"
+                      type="date"
+                      value={editDueDate}
+                      onChange={(e) => setEditDueDate(e.target.value)}
+                      className="rounded-md border border-slate-300 px-2 py-1 text-sm"
+                    />
+                  </div>
                 )}
               </div>
 
@@ -357,6 +442,27 @@ export function AccountsList({
                   className="rounded-md bg-emerald-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {payingId === account.id ? "Processando..." : "Pagar"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => toggleDivisionParticipation(account)}
+                  disabled={divisionUpdatingId === account.id}
+                  className="rounded-md bg-indigo-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {divisionUpdatingId === account.id
+                    ? "Atualizando..."
+                    : account.participatesInDivision
+                      ? "Remover da divisao"
+                      : "Marcar na divisao"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => (editingAccountId === account.id ? saveEdit(account) : startEditing(account))}
+                  className="rounded-md bg-slate-700 px-4 py-2 text-white"
+                >
+                  {editingAccountId === account.id ? "Salvar" : "Editar"}
                 </button>
               </div>
             </article>

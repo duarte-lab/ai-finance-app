@@ -7,6 +7,8 @@ import {
   getDashboardSummary,
   getPeople,
   markAccountAsPaid,
+  updateAccount,
+  updateAccountDivisionParticipation,
 } from "@/services/api";
 
 describe("services/api", () => {
@@ -26,7 +28,16 @@ describe("services/api", () => {
 
   it("getAccounts should request with month filter and return data", async () => {
     const payload = [
-      { id: "1", name: "Internet", amount: 120.5, dueDate: "2026-05-01T00:00:00Z", paid: false, participants: [] },
+      {
+        id: "1",
+        name: "Internet",
+        amount: 120.5,
+        dueDate: "2026-05-01T00:00:00Z",
+        createdAtUtc: "2026-04-01T00:00:00Z",
+        paid: false,
+        participatesInDivision: false,
+        participants: [],
+      },
     ];
 
     (global.fetch as jest.Mock).mockResolvedValue({
@@ -44,7 +55,16 @@ describe("services/api", () => {
   });
 
   it("markAccountAsPaid should call patch endpoint", async () => {
-    const payload = { id: "1", name: "Internet", amount: 120.5, dueDate: "2026-05-01T00:00:00Z", paid: true, participants: [] };
+    const payload = {
+      id: "1",
+      name: "Internet",
+      amount: 120.5,
+      dueDate: "2026-05-01T00:00:00Z",
+      createdAtUtc: "2026-04-01T00:00:00Z",
+      paid: true,
+      participatesInDivision: false,
+      participants: [],
+    };
 
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
@@ -61,7 +81,16 @@ describe("services/api", () => {
   });
 
   it("createAccount should call post endpoint", async () => {
-    const payload = { id: "2", name: "Water", amount: 99.9, dueDate: "2026-05-05T00:00:00Z", paid: false, participants: [] };
+    const payload = {
+      id: "2",
+      name: "Water",
+      amount: 99.9,
+      dueDate: "2026-05-05T00:00:00Z",
+      createdAtUtc: "2026-04-01T00:00:00Z",
+      paid: false,
+      participatesInDivision: false,
+      participants: [],
+    };
 
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
@@ -72,6 +101,7 @@ describe("services/api", () => {
       name: "Water",
       amount: 99.9,
       dueDate: "2026-05-05T00:00:00Z",
+      participatesInDivision: false,
       participants: [],
     });
 
@@ -79,6 +109,65 @@ describe("services/api", () => {
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/accounts"),
       expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("updateAccount should call put endpoint", async () => {
+    const payload = {
+      id: "2",
+      name: "Water updated",
+      amount: 100,
+      dueDate: "2026-05-05T00:00:00Z",
+      createdAtUtc: "2026-04-01T00:00:00Z",
+      paid: false,
+      participatesInDivision: true,
+      participants: [],
+    };
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => payload,
+    });
+
+    const result = await updateAccount("2", {
+      name: "Water updated",
+      amount: 100,
+      dueDate: "2026-05-05T00:00:00Z",
+      paid: false,
+      participatesInDivision: true,
+      participants: [],
+    });
+
+    expect(result).toEqual(payload);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/accounts/2"),
+      expect.objectContaining({ method: "PUT" }),
+    );
+  });
+
+  it("updateAccountDivisionParticipation should call patch endpoint", async () => {
+    const payload = {
+      id: "2",
+      name: "Water",
+      amount: 100,
+      dueDate: "2026-05-05T00:00:00Z",
+      createdAtUtc: "2026-04-01T00:00:00Z",
+      paid: false,
+      participatesInDivision: true,
+      participants: [],
+    };
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => payload,
+    });
+
+    const result = await updateAccountDivisionParticipation("2", true);
+
+    expect(result).toEqual(payload);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/accounts/2/division-participation"),
+      expect.objectContaining({ method: "PATCH" }),
     );
   });
 
