@@ -84,7 +84,12 @@ describe("AccountsList", () => {
     fireEvent.click(screen.getByRole("button", { name: "Criar conta" }));
 
     await waitFor(() => {
-      expect(api.createAccount).toHaveBeenCalledTimes(1);
+      expect(api.createAccount).toHaveBeenCalledWith({
+        name: "Water",
+        amount: 90,
+        dueDate: "2026-05-22T00:00:00.000Z",
+        participatesInDivision: false,
+      });
       expect(screen.getByText("Water")).toBeInTheDocument();
     });
   });
@@ -143,46 +148,4 @@ describe("AccountsList", () => {
     });
   });
 
-  it("creates a new account with selected participants", async () => {
-    (api.getPeople as jest.Mock).mockResolvedValue([
-      { id: "person-1", name: "Ana", createdAtUtc: "2026-05-01T00:00:00Z" },
-      { id: "person-2", name: "Bruno", createdAtUtc: "2026-05-01T00:00:00Z" },
-    ]);
-    (api.createAccount as jest.Mock).mockResolvedValue({
-      id: "account-2",
-      name: "Water",
-      amount: 90,
-      dueDate: "2026-05-22T00:00:00Z",
-      createdAtUtc: "2026-05-01T00:00:00Z",
-      paid: false,
-      participatesInDivision: false,
-      participants: [{ personId: "person-1" }, { personId: "person-2" }],
-    });
-
-    render(<AccountsList initialAccounts={initialAccounts} initialYear={2026} initialMonth={5} />);
-
-    await waitFor(() => {
-      expect(screen.getByText("2 pessoa(s) cadastrada(s)")).toBeInTheDocument();
-    });
-
-    fireEvent.change(screen.getByLabelText("Nome da conta"), { target: { value: "Water" } });
-    fireEvent.change(screen.getByLabelText("Valor da conta"), { target: { value: "90" } });
-    fireEvent.change(screen.getByLabelText("Data de vencimento"), { target: { value: "2026-05-22" } });
-
-    fireEvent.click(screen.getByLabelText("Selecionar participante Ana"));
-    fireEvent.click(screen.getByLabelText("Selecionar participante Bruno"));
-
-    fireEvent.click(screen.getByRole("button", { name: "Criar conta" }));
-
-    await waitFor(() => {
-      expect(api.createAccount).toHaveBeenCalledWith({
-        name: "Water",
-        amount: 90,
-        dueDate: "2026-05-22T00:00:00.000Z",
-        participatesInDivision: false,
-        participants: [{ personId: "person-1" }, { personId: "person-2" }],
-      });
-      expect(screen.getByText("Water")).toBeInTheDocument();
-    });
-  });
 });

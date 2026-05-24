@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import {
   Account,
-  AccountParticipant,
   Person,
   createPerson,
   createAccount,
@@ -40,7 +39,6 @@ export function AccountsList({
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [personName, setPersonName] = useState("");
-  const [participants, setParticipants] = useState<AccountParticipant[]>([]);
   const [editName, setEditName] = useState("");
   const [editAmount, setEditAmount] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
@@ -60,15 +58,6 @@ export function AccountsList({
     } finally {
       setIsPeopleLoading(false);
     }
-  }
-
-  function toggleParticipant(personId: string) {
-    const selectedIds = participants.map((item) => item.personId);
-    setParticipants((current) =>
-      selectedIds.includes(personId)
-        ? current.filter((item) => item.personId !== personId)
-        : [...current, { personId }],
-    );
   }
 
   async function submitNewPerson(event: React.FormEvent<HTMLFormElement>) {
@@ -125,14 +114,12 @@ export function AccountsList({
         amount: Number(amount),
         dueDate: new Date(`${dueDate}T00:00:00.000Z`).toISOString(),
         participatesInDivision: false,
-        participants,
       });
 
       setAccounts((prev) => [created, ...prev]);
       setName("");
       setAmount("");
       setDueDate("");
-      setParticipants([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create account.");
     }
@@ -248,39 +235,6 @@ export function AccountsList({
           >
             Criar conta
           </button>
-
-          <div className="md:col-span-4 rounded-md border border-slate-200 p-3">
-            <h2 className="text-sm font-semibold text-slate-900">Despesa compartilhada</h2>
-            <p className="mb-2 text-xs text-slate-600">
-              Selecione as pessoas participantes desta conta.
-            </p>
-
-            {people.length === 0 ? (
-              <p className="text-sm text-slate-600">Cadastre pessoas para compartilhar despesas.</p>
-            ) : (
-              <div className="space-y-2">
-                {people.map((person) => {
-                  const selected = participants.find((item) => item.personId === person.id);
-
-                  return (
-                    <div key={person.id} className="flex flex-wrap items-center gap-3">
-                      <label className="flex items-center gap-2 text-sm text-slate-700">
-                        <input
-                          aria-label={`Selecionar participante ${person.name}`}
-                          type="checkbox"
-                          checked={Boolean(selected)}
-                          onChange={() => toggleParticipant(person.id)}
-                        />
-                        {person.name}
-                      </label>
-
-                      {selected && <span className="text-xs text-emerald-700">Participante</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
         </form>
         <div id="filtro-mensal" className="flex flex-wrap items-end gap-3 scroll-mt-24">
           <label className="flex flex-col gap-1 text-sm text-slate-700">
