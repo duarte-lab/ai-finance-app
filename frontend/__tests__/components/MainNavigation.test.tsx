@@ -29,5 +29,10 @@ describe("MainNavigation", () => {
       "href",
       "/closing",
     );
+
+    expect(screen.getByRole("link", { name: /pessoas/i })).toHaveAttribute(
+      "href",
+      "/people",
+    );
   });
 });

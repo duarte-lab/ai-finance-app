@@ -6,27 +6,17 @@ describe("Home", () => {
     render(<Home />);
 
     expect(
-      screen.getByRole("link", { name: /fechamento mensal/i }),
-    ).toHaveAttribute("href", "/closing");
-
-    expect(
-      screen.getByRole("link", { name: /dashboard financeiro/i }),
+      screen.getByRole("link", { name: /dashboard/i }),
     ).toHaveAttribute("href", "/dashboard");
 
     expect(
-      screen.getByRole("link", { name: /visao geral de contas/i }),
+      screen.getByRole("link", { name: /contas/i }),
     ).toHaveAttribute("href", "/accounts");
 
     expect(
-      screen.getByRole("link", { name: /criar nova conta/i }),
-    ).toHaveAttribute("href", "/accounts#nova-conta");
+      screen.getByRole("link", { name: /fechamento/i }),
+    ).toHaveAttribute("href", "/closing");
 
-    expect(
-      screen.getByRole("link", { name: /filtrar por mes/i }),
-    ).toHaveAttribute("href", "/accounts#filtro-mensal");
-
-    expect(
-      screen.getByRole("link", { name: /marcar conta como paga/i }),
-    ).toHaveAttribute("href", "/accounts#lista-contas");
+    expect(screen.getByRole("link", { name: /pessoas/i })).toHaveAttribute("href", "/people");
   });
 });
