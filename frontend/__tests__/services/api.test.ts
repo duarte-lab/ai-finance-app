@@ -2,6 +2,7 @@ import {
   createPerson,
   createMonthlyClosing,
   createAccount,
+  getDueNotifications,
   getAccounts,
   getDashboardSummary,
   getPeople,
@@ -173,6 +174,32 @@ describe("services/api", () => {
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/people"),
       expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("getDueNotifications should call notifications endpoint", async () => {
+    const payload = [
+      {
+        accountId: "account-1",
+        accountName: "Rent",
+        dueDateUtc: "2026-05-23T00:00:00Z",
+        daysUntilDue: 0,
+        type: "DueToday",
+        message: "A conta 'Rent' vence hoje.",
+      },
+    ];
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => payload,
+    });
+
+    const result = await getDueNotifications();
+
+    expect(result).toEqual(payload);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/notifications/due"),
+      { cache: "no-store" },
     );
   });
 });

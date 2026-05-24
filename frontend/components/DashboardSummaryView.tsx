@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { DashboardSummary, getDashboardSummary } from "@/services/api";
+import { DashboardSummary, DueNotification, getDashboardSummary } from "@/services/api";
 
 interface DashboardSummaryViewProps {
   initialSummary: DashboardSummary;
+  initialNotifications: DueNotification[];
   initialYear: number;
   initialMonth: number;
 }
@@ -26,10 +27,12 @@ function getBarPercentage(value: number, total: number): number {
 
 export function DashboardSummaryView({
   initialSummary,
+  initialNotifications,
   initialYear,
   initialMonth,
 }: DashboardSummaryViewProps) {
   const [summary, setSummary] = useState<DashboardSummary>(initialSummary);
+  const [notifications] = useState<DueNotification[]>(initialNotifications);
   const [year, setYear] = useState<number>(initialYear);
   const [month, setMonth] = useState<number>(initialMonth);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +57,27 @@ export function DashboardSummaryView({
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
+      {notifications.length > 0 && (
+        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+          <h2 className="text-lg font-semibold text-amber-900">Alertas de vencimento</h2>
+          <p className="mt-1 text-sm text-amber-800">
+            {notifications.length} conta(s) com vencimento hoje ou nos proximos 3 dias.
+          </p>
+
+          <ul className="mt-4 space-y-2">
+            {notifications.map((item) => (
+              <li
+                key={item.accountId}
+                className="rounded-md border border-amber-200 bg-white p-3 text-sm text-slate-800"
+              >
+                <p className="font-medium">{item.accountName}</p>
+                <p>{item.message}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h1 className="text-2xl font-semibold text-slate-900">Dashboard financeiro</h1>
         <p className="mt-1 text-sm text-slate-600">

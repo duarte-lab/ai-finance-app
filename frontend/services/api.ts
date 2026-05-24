@@ -69,6 +69,17 @@ export interface MonthlyClosingResult {
   closedAtUtc: string;
 }
 
+export type NotificationType = "DueInThreeDays" | "DueToday";
+
+export interface DueNotification {
+  accountId: string;
+  accountName: string;
+  dueDateUtc: string;
+  daysUntilDue: number;
+  type: NotificationType;
+  message: string;
+}
+
 interface GetAccountsFilter {
   year?: number;
   month?: number;
@@ -178,4 +189,14 @@ export async function createMonthlyClosing(
   }
 
   return (await res.json()) as MonthlyClosingResult;
+}
+
+export async function getDueNotifications(): Promise<DueNotification[]> {
+  const res = await fetch(`${getApiBaseUrl()}/api/notifications/due`, { cache: "no-store" });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch due notifications: ${res.status}`);
+  }
+
+  return (await res.json()) as DueNotification[];
 }

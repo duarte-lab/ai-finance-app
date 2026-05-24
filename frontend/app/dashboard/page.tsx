@@ -1,5 +1,5 @@
 import { DashboardSummaryView } from "@/components/DashboardSummaryView";
-import { getDashboardSummary } from "@/services/api";
+import { getDashboardSummary, getDueNotifications } from "@/services/api";
 
 export const dynamic = "force-dynamic";
 
@@ -8,11 +8,15 @@ export default async function DashboardPage() {
   const year = now.getUTCFullYear();
   const month = now.getUTCMonth() + 1;
 
-  const summary = await getDashboardSummary({ year, month });
+  const [summary, notifications] = await Promise.all([
+    getDashboardSummary({ year, month }),
+    getDueNotifications(),
+  ]);
 
   return (
     <DashboardSummaryView
       initialSummary={summary}
+      initialNotifications={notifications}
       initialYear={year}
       initialMonth={month}
     />

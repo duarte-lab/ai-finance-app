@@ -19,6 +19,16 @@ describe("DashboardSummaryView", () => {
             { label: "Pending", amount: 400, count: 1 },
           ],
         }}
+        initialNotifications={[
+          {
+            accountId: "account-1",
+            accountName: "Rent",
+            dueDateUtc: "2026-05-23T00:00:00Z",
+            daysUntilDue: 0,
+            type: "DueToday",
+            message: "A conta 'Rent' vence hoje.",
+          },
+        ]}
         initialYear={2026}
         initialMonth={5}
       />,
@@ -33,5 +43,7 @@ describe("DashboardSummaryView", () => {
     expect(screen.getByRole("button", { name: /filtrar/i })).toBeInTheDocument();
     expect(screen.getByLabelText("barra-pago")).toBeInTheDocument();
     expect(screen.getByLabelText("barra-pendente")).toBeInTheDocument();
+    expect(screen.getByText(/alertas de vencimento/i)).toBeInTheDocument();
+    expect(screen.getByText(/a conta 'rent' vence hoje/i)).toBeInTheDocument();
   });
 });
