@@ -7,6 +7,7 @@ public class Account
     public decimal Amount { get; set; }
     public DateTime DueDate { get; set; }
     public bool Paid { get; set; }
+    public List<AccountParticipant> Participants { get; set; } = [];
 
     public void MarkAsPaid()
     {

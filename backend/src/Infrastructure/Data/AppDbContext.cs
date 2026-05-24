@@ -22,4 +22,5 @@ public class AppDbContext
 
     public IMongoCollection<Account> Accounts => _database.GetCollection<Account>("Accounts");
     public IMongoCollection<MonthlyClosing> MonthlyClosings => _database.GetCollection<MonthlyClosing>("MonthlyClosings");
+    public IMongoCollection<Person> People => _database.GetCollection<Person>("People");
 }

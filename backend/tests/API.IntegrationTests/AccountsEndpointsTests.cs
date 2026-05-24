@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Application.Accounts.DTOs;
+using Application.People.DTOs;
 using Xunit;
 
 namespace API.IntegrationTests;
@@ -47,5 +48,58 @@ public class AccountsEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         Assert.NotNull(items);
         Assert.Single(items!);
         Assert.Equal("Internet", items[0].Name);
+    }
+
+    [Fact]
+    public async Task CreateAccount_WithSharedParticipants_ShouldReturnParticipants()
+    {
+        var personOneResponse = await _client.PostAsJsonAsync("/api/people", new CreatePersonRequest("Ana"));
+        var personTwoResponse = await _client.PostAsJsonAsync("/api/people", new CreatePersonRequest("Bruno"));
+
+        Assert.Equal(HttpStatusCode.Created, personOneResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, personTwoResponse.StatusCode);
+
+        var personOne = await personOneResponse.Content.ReadFromJsonAsync<PersonResponse>();
+        var personTwo = await personTwoResponse.Content.ReadFromJsonAsync<PersonResponse>();
+
+        var request = new CreateAccountRequest(
+            "Rent",
+            2500m,
+            new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc),
+            [
+                new AccountParticipantRequest(personOne!.Id, 70m),
+                new AccountParticipantRequest(personTwo!.Id, 30m),
+            ]);
+
+        var response = await _client.PostAsJsonAsync("/api/accounts", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal(2, payload!.Participants.Count);
+        Assert.Equal(100m, payload.Participants.Sum(x => x.Percentage));
+    }
+
+    [Fact]
+    public async Task CreateAccount_WithInvalidParticipantsPercentage_ShouldReturnBadRequest()
+    {
+        var personOneResponse = await _client.PostAsJsonAsync("/api/people", new CreatePersonRequest("Ana"));
+        var personTwoResponse = await _client.PostAsJsonAsync("/api/people", new CreatePersonRequest("Bruno"));
+
+        var personOne = await personOneResponse.Content.ReadFromJsonAsync<PersonResponse>();
+        var personTwo = await personTwoResponse.Content.ReadFromJsonAsync<PersonResponse>();
+
+        var request = new CreateAccountRequest(
+            "Rent",
+            2500m,
+            new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc),
+            [
+                new AccountParticipantRequest(personOne!.Id, 60m),
+                new AccountParticipantRequest(personTwo!.Id, 20m),
+            ]);
+
+        var response = await _client.PostAsJsonAsync("/api/accounts", request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }

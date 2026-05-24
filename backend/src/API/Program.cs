@@ -4,6 +4,8 @@ using Application.Accounts.UseCases;
 using Application.Dashboard.UseCases;
 using Application.MonthlyClosing.Interfaces;
 using Application.MonthlyClosing.UseCases;
+using Application.People.Interfaces;
+using Application.People.UseCases;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Microsoft.IdentityModel.Tokens;
@@ -28,6 +30,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton<AppDbContext>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IMonthlyClosingRepository, MonthlyClosingRepository>();
+builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 builder.Services.AddScoped<GetAccountsUseCase>();
 builder.Services.AddScoped<GetAccountByIdUseCase>();
 builder.Services.AddScoped<CreateAccountUseCase>();
@@ -36,6 +39,8 @@ builder.Services.AddScoped<DeleteAccountUseCase>();
 builder.Services.AddScoped<MarkAccountAsPaidUseCase>();
 builder.Services.AddScoped<GetDashboardSummaryUseCase>();
 builder.Services.AddScoped<CreateMonthlyClosingUseCase>();
+builder.Services.AddScoped<GetPeopleUseCase>();
+builder.Services.AddScoped<CreatePersonUseCase>();
 
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
