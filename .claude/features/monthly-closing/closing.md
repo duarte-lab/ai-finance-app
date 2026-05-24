@@ -10,6 +10,7 @@ Fechar o mês e dividir despesas.
 
 ## Regras
 - Todas as contas marcadas como participantes da divisão entram na conta
+- As contas que não foram marcadas devem aparecer para dar a opção de incluir na divisão
 - Divisão igualitária inicialmente
 - Registrar histórico
 - Marcar todas as contas como pagas ao fechar o mês.
