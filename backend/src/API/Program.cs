@@ -4,18 +4,27 @@ using Application.Accounts.UseCases;
 using Application.Dashboard.UseCases;
 using Application.MonthlyClosing.Interfaces;
 using Application.MonthlyClosing.UseCases;
+using Application.Notifications.Interfaces;
+using Application.Notifications.UseCases;
 using Application.People.Interfaces;
 using Application.People.UseCases;
+using Api.Notifications;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Microsoft.IdentityModel.Tokens;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? ["http://localhost:3000"];
 builder.Services.AddCors(options =>
@@ -41,6 +50,9 @@ builder.Services.AddScoped<GetDashboardSummaryUseCase>();
 builder.Services.AddScoped<CreateMonthlyClosingUseCase>();
 builder.Services.AddScoped<GetPeopleUseCase>();
 builder.Services.AddScoped<CreatePersonUseCase>();
+builder.Services.AddScoped<GetDueNotificationsUseCase>();
+builder.Services.AddSingleton<INotificationClock, SystemNotificationClock>();
+builder.Services.AddHostedService<NotificationsBackgroundService>();
 
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
