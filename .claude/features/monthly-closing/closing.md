@@ -9,9 +9,11 @@ Fechar o mês e dividir despesas.
 - Calcular divisão
 
 ## Regras
-- Apenas contas não pagas entram
+- Todas as contas marcadas como participantes da divisão entram na conta
 - Divisão igualitária inicialmente
 - Registrar histórico
+- Marcar todas as contas como pagas ao fechar o mês.
+- Permitir reabertura do mês
 
 ## Backend
 - Endpoint POST /closing
@@ -24,3 +26,5 @@ Fechar o mês e dividir despesas.
 ## Testes
 - Fechamento com múltiplas contas
 - Fechamento sem contas (erro)
+- Fechamentos com contas não pagas
+- Fechamento com contas que participam e que não participam da divisão

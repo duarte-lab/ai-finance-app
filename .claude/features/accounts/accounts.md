@@ -13,7 +13,9 @@ Gerenciar contas domésticas.
 - Nome
 - Valor
 - Data de vencimento
+- Participa da divisão (bool)
 - Pago (bool)
+- Data de criação (não alterável)
 
 ## Regras
 - Datas devem ser UTC
@@ -28,7 +30,9 @@ Gerenciar contas domésticas.
 - Criar página específica
 - Lista de contas
 - Botão "pagar"
+- Permitir editar
 
 ## Testes
 - Criar conta
 - Marcar como paga
+- Marcar como participante da divisão

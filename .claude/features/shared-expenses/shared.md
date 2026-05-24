@@ -6,7 +6,6 @@ Dividir contas entre pessoas.
 ## Requisitos
 - Cadastro de pessoas
 - Associação com contas
-- Percentual customizado (futuro)
 
 ## Backend
 - Entidade Person
