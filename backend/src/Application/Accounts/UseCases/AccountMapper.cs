@@ -11,7 +11,9 @@ internal static class AccountMapper
             account.Name,
             account.Amount,
             account.DueDate,
+            account.CreatedAtUtc,
             account.Paid,
+            account.ParticipatesInDivision,
             account.Participants
                 .Select(participant => new AccountParticipantResponse(
                     participant.PersonId,

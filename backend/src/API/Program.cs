@@ -57,6 +57,7 @@ builder.Services.AddScoped<GetAccountsUseCase>();
 builder.Services.AddScoped<GetAccountByIdUseCase>();
 builder.Services.AddScoped<CreateAccountUseCase>();
 builder.Services.AddScoped<UpdateAccountUseCase>();
+builder.Services.AddScoped<UpdateAccountDivisionParticipationUseCase>();
 builder.Services.AddScoped<DeleteAccountUseCase>();
 builder.Services.AddScoped<MarkAccountAsPaidUseCase>();
 builder.Services.AddScoped<GetDashboardSummaryUseCase>();

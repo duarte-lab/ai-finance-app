@@ -115,4 +115,27 @@ public class AccountsEndpointsTests : IClassFixture<CustomWebApplicationFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Fact]
+    public async Task UpdateDivisionParticipation_ShouldReturnUpdatedAccount()
+    {
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/accounts",
+            new CreateAccountRequest("Division account", 100m, new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc)));
+
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+
+        var updateResponse = await _client.PatchAsJsonAsync(
+            $"/api/accounts/{created!.Id}/division-participation",
+            new UpdateDivisionParticipationRequest(true));
+
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+
+        var updated = await updateResponse.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(updated);
+        Assert.True(updated!.ParticipatesInDivision);
+    }
 }

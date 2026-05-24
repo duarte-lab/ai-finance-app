@@ -6,4 +6,5 @@ public record CreateAccountRequest(
 	string Name,
 	decimal Amount,
 	DateTime DueDate,
-	IReadOnlyCollection<AccountParticipantRequest>? Participants = null);
+	IReadOnlyCollection<AccountParticipantRequest>? Participants = null,
+	bool ParticipatesInDivision = false);

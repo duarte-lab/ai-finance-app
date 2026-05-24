@@ -25,6 +25,8 @@ public class AccountsUseCasesTests
         result.Amount.Should().Be(120.50m);
         result.Paid.Should().BeFalse();
         result.DueDate.Kind.Should().Be(DateTimeKind.Utc);
+        result.CreatedAtUtc.Kind.Should().Be(DateTimeKind.Utc);
+        result.ParticipatesInDivision.Should().BeFalse();
         repositoryMock.Verify(
             x => x.CreateAsync(It.Is<Account>(a =>
                 a.Name == "Internet" &&
@@ -167,5 +169,34 @@ public class AccountsUseCasesTests
         result.Should().NotBeNull();
         result!.Paid.Should().BeTrue();
         repositoryMock.Verify(x => x.UpdateAsync(It.Is<Account>(a => a.Id == id && a.Paid)), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateAccountDivisionParticipation_ExistingAccount_ShouldUpdateFlag()
+    {
+        var id = Guid.NewGuid();
+        var account = new Account
+        {
+            Id = id,
+            Name = "Internet",
+            Amount = 100m,
+            DueDate = DateTime.UtcNow,
+            CreatedAtUtc = DateTime.UtcNow.AddDays(-10),
+            Paid = false,
+            ParticipatesInDivision = false,
+        };
+
+        var repositoryMock = new Mock<IAccountRepository>();
+        repositoryMock.Setup(x => x.GetByIdAsync(id)).ReturnsAsync(account);
+
+        var useCase = new UpdateAccountDivisionParticipationUseCase(repositoryMock.Object);
+
+        var result = await useCase.ExecuteAsync(id, true);
+
+        result.Should().NotBeNull();
+        result!.ParticipatesInDivision.Should().BeTrue();
+        repositoryMock.Verify(
+            x => x.UpdateAsync(It.Is<Account>(a => a.Id == id && a.ParticipatesInDivision)),
+            Times.Once);
     }
 }

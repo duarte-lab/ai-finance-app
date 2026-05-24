@@ -34,6 +34,7 @@ public class UpdateAccountUseCase
         account.Amount = request.Amount;
         account.DueDate = AccountRules.NormalizeToUtc(request.DueDate);
         account.Paid = request.Paid;
+        account.ParticipatesInDivision = request.ParticipatesInDivision;
         account.Participants = participants.ToList();
 
         await _repository.UpdateAsync(account);

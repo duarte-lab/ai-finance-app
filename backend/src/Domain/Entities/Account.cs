@@ -6,7 +6,9 @@ public class Account
     public required string Name { get; set; }
     public decimal Amount { get; set; }
     public DateTime DueDate { get; set; }
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public bool Paid { get; set; }
+    public bool ParticipatesInDivision { get; set; }
     public List<AccountParticipant> Participants { get; set; } = [];
 
     public void MarkAsPaid()

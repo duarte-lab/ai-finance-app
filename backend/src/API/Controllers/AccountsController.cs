@@ -12,6 +12,7 @@ public class AccountsController : ControllerBase
     private readonly GetAccountByIdUseCase _getAccountByIdUseCase;
     private readonly CreateAccountUseCase _createAccountUseCase;
     private readonly UpdateAccountUseCase _updateAccountUseCase;
+    private readonly UpdateAccountDivisionParticipationUseCase _updateAccountDivisionParticipationUseCase;
     private readonly DeleteAccountUseCase _deleteAccountUseCase;
     private readonly MarkAccountAsPaidUseCase _markAccountAsPaidUseCase;
 
@@ -20,6 +21,7 @@ public class AccountsController : ControllerBase
         GetAccountByIdUseCase getAccountByIdUseCase,
         CreateAccountUseCase createAccountUseCase,
         UpdateAccountUseCase updateAccountUseCase,
+        UpdateAccountDivisionParticipationUseCase updateAccountDivisionParticipationUseCase,
         DeleteAccountUseCase deleteAccountUseCase,
         MarkAccountAsPaidUseCase markAccountAsPaidUseCase)
     {
@@ -27,6 +29,7 @@ public class AccountsController : ControllerBase
         _getAccountByIdUseCase = getAccountByIdUseCase;
         _createAccountUseCase = createAccountUseCase;
         _updateAccountUseCase = updateAccountUseCase;
+        _updateAccountDivisionParticipationUseCase = updateAccountDivisionParticipationUseCase;
         _deleteAccountUseCase = deleteAccountUseCase;
         _markAccountAsPaidUseCase = markAccountAsPaidUseCase;
     }
@@ -92,6 +95,13 @@ public class AccountsController : ControllerBase
     public async Task<IActionResult> MarkAsPaid(Guid id)
     {
         var account = await _markAccountAsPaidUseCase.ExecuteAsync(id);
+        return account is null ? NotFound() : Ok(account);
+    }
+
+    [HttpPatch("{id:guid}/division-participation")]
+    public async Task<IActionResult> UpdateDivisionParticipation(Guid id, [FromBody] UpdateDivisionParticipationRequest request)
+    {
+        var account = await _updateAccountDivisionParticipationUseCase.ExecuteAsync(id, request.ParticipatesInDivision);
         return account is null ? NotFound() : Ok(account);
     }
 

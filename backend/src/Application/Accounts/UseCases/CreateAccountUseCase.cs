@@ -31,7 +31,9 @@ public class CreateAccountUseCase
             Name = request.Name.Trim(),
             Amount = request.Amount,
             DueDate = AccountRules.NormalizeToUtc(request.DueDate),
+            CreatedAtUtc = DateTime.UtcNow,
             Paid = false,
+            ParticipatesInDivision = request.ParticipatesInDivision,
             Participants = participants.ToList(),
         };
 
