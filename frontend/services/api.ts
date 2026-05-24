@@ -20,6 +20,7 @@ export interface Person {
   id: string;
   name: string;
   createdAtUtc: string;
+  deletedAtUtc?: string | null;
 }
 
 export interface CreateAccountRequest {
@@ -194,6 +195,17 @@ export async function createPerson(name: string): Promise<Person> {
   }
 
   return (await res.json()) as Person;
+}
+
+export async function deletePerson(id: string): Promise<void> {
+  const res = await fetch(`${getApiBaseUrl()}/api/people/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to delete person: ${res.status}`);
+  }
 }
 
 export async function getDashboardSummary(

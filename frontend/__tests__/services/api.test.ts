@@ -1,5 +1,6 @@
 import {
   createPerson,
+  deletePerson,
   createMonthlyClosing,
   getMonthlyClosing,
   reopenMonthlyClosing,
@@ -258,6 +259,19 @@ describe("services/api", () => {
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/people"),
       expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("deletePerson should call people delete endpoint", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+    });
+
+    await deletePerson("person-2");
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/people/person-2"),
+      expect.objectContaining({ method: "DELETE" }),
     );
   });
 

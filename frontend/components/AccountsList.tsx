@@ -1,13 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Account,
-  Person,
-  createPerson,
   createAccount,
   getAccounts,
-  getPeople,
   markAccountAsPaid,
   updateAccount,
   updateAccountDivisionParticipation,
@@ -25,56 +22,19 @@ export function AccountsList({
   initialMonth,
 }: AccountsListProps) {
   const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
-  const [people, setPeople] = useState<Person[]>([]);
   const [year, setYear] = useState<number>(initialYear);
   const [month, setMonth] = useState<number>(initialMonth);
   const [isLoading, setIsLoading] = useState(false);
   const [payingId, setPayingId] = useState<string | null>(null);
-  const [isPeopleLoading, setIsPeopleLoading] = useState(false);
-  const [isCreatingPerson, setIsCreatingPerson] = useState(false);
   const [divisionUpdatingId, setDivisionUpdatingId] = useState<string | null>(null);
   const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [personName, setPersonName] = useState("");
   const [editName, setEditName] = useState("");
   const [editAmount, setEditAmount] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
-
-  useEffect(() => {
-    void loadPeople();
-  }, []);
-
-  async function loadPeople() {
-    setIsPeopleLoading(true);
-
-    try {
-      const list = await getPeople();
-      setPeople(list);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load people.");
-    } finally {
-      setIsPeopleLoading(false);
-    }
-  }
-
-  async function submitNewPerson(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-
-    try {
-      setIsCreatingPerson(true);
-      const created = await createPerson(personName);
-      setPeople((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
-      setPersonName("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create person.");
-    } finally {
-      setIsCreatingPerson(false);
-    }
-  }
 
   async function applyFilter() {
     setIsLoading(true);
@@ -172,29 +132,6 @@ export function AccountsList({
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
       <header className="flex flex-col gap-3 rounded-xl border border-slate-200 p-4">
         <h1 className="text-2xl font-semibold text-slate-900">Contas</h1>
-        <form id="nova-pessoa" onSubmit={submitNewPerson} className="flex flex-wrap items-end gap-3 rounded-lg border border-slate-200 p-3">
-          <label className="flex flex-col gap-1 text-sm text-slate-700">
-            Nova pessoa
-            <input
-              aria-label="Nome da pessoa"
-              value={personName}
-              onChange={(e) => setPersonName(e.target.value)}
-              placeholder="Ex.: Ana"
-              required
-              className="rounded-md border border-slate-300 px-3 py-2"
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={isCreatingPerson}
-            className="rounded-md bg-indigo-700 px-4 py-2 text-white disabled:opacity-60"
-          >
-            {isCreatingPerson ? "Salvando..." : "Cadastrar pessoa"}
-          </button>
-          <p className="text-sm text-slate-600">
-            {isPeopleLoading ? "Carregando pessoas..." : `${people.length} pessoa(s) cadastrada(s)`}
-          </p>
-        </form>
 
         <form id="nova-conta" onSubmit={submitNewAccount} className="grid gap-3 md:grid-cols-4 scroll-mt-24">
           <input

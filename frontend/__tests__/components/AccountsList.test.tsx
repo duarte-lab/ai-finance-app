@@ -7,8 +7,6 @@ jest.mock("@/services/api", () => ({
   getAccounts: jest.fn(),
   markAccountAsPaid: jest.fn(),
   createAccount: jest.fn(),
-  getPeople: jest.fn(),
-  createPerson: jest.fn(),
   updateAccount: jest.fn(),
   updateAccountDivisionParticipation: jest.fn(),
 }));
@@ -27,7 +25,6 @@ describe("AccountsList", () => {
   ];
 
   beforeEach(() => {
-    (api.getPeople as jest.Mock).mockResolvedValue([]);
     (api.createAccount as jest.Mock).mockReset();
   });
 
@@ -89,24 +86,6 @@ describe("AccountsList", () => {
         participatesInDivision: false,
       });
       expect(screen.getByText("Water")).toBeInTheDocument();
-    });
-  });
-
-  it("creates a person", async () => {
-    (api.createPerson as jest.Mock).mockResolvedValue({
-      id: "person-1",
-      name: "Ana",
-      createdAtUtc: "2026-05-01T00:00:00Z",
-    });
-
-    render(<AccountsList initialAccounts={initialAccounts} initialYear={2026} initialMonth={5} />);
-
-    fireEvent.change(screen.getByLabelText("Nome da pessoa"), { target: { value: "Ana" } });
-    fireEvent.click(screen.getByRole("button", { name: "Cadastrar pessoa" }));
-
-    await waitFor(() => {
-      expect(api.createPerson).toHaveBeenCalledWith("Ana");
-      expect(screen.getByText("1 pessoa(s) cadastrada(s)")).toBeInTheDocument();
     });
   });
 
