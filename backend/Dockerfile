@@ -23,4 +23,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 USER appuser
 EXPOSE 8080
 
+# Porta dinâmica do Render
+ENV ASPNETCORE_URLS=http://+:${PORT}
+
 ENTRYPOINT ["dotnet", "API.dll"]
