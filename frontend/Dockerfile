@@ -7,6 +7,10 @@ RUN npm ci
 
 # Copy source and build
 COPY . .
+
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+
 RUN npm run build
 
 # Prune to production dependencies only
