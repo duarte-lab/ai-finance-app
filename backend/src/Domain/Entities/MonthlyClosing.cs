@@ -3,6 +3,7 @@ namespace Domain.Entities;
 public class MonthlyClosing
 {
     public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
     public int Year { get; set; }
     public int Month { get; set; }
     public DateTime ClosedAtUtc { get; set; }

@@ -11,7 +11,7 @@ public class PeopleEndpointsTests : IClassFixture<CustomWebApplicationFactory>
 
     public PeopleEndpointsTests(CustomWebApplicationFactory factory)
     {
-        _client = factory.CreateApiClient();
+        _client = factory.CreateAuthenticatedApiClient();
     }
 
     [Fact]

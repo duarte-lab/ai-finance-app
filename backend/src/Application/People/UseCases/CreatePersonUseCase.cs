@@ -1,3 +1,4 @@
+using Application.Auth.Interfaces;
 using Application.People.DTOs;
 using Application.People.Interfaces;
 using Domain.Entities;
@@ -8,10 +9,12 @@ public class CreatePersonUseCase
 {
     private const int MaxNameLength = 50;
     private readonly IPersonRepository _repository;
+    private readonly ICurrentUserContext _currentUser;
 
-    public CreatePersonUseCase(IPersonRepository repository)
+    public CreatePersonUseCase(IPersonRepository repository, ICurrentUserContext currentUser)
     {
         _repository = repository;
+        _currentUser = currentUser;
     }
 
     public async Task<PersonResponse> ExecuteAsync(CreatePersonRequest request)
@@ -30,6 +33,7 @@ public class CreatePersonUseCase
         var person = new Person
         {
             Id = Guid.NewGuid(),
+            TenantId = _currentUser.TenantId ?? Guid.Empty,
             Name = trimmedName,
             CreatedAtUtc = DateTime.UtcNow,
             DeletedAtUtc = null,

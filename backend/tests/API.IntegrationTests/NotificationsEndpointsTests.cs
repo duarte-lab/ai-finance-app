@@ -14,7 +14,7 @@ public class NotificationsEndpointsTests : IClassFixture<CustomWebApplicationFac
 
     public NotificationsEndpointsTests(CustomWebApplicationFactory factory)
     {
-        _client = factory.CreateApiClient();
+        _client = factory.CreateAuthenticatedApiClient();
     }
 
     [Fact]

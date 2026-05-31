@@ -1,10 +1,8 @@
 namespace Domain.Entities;
 
-public class Person
+public class Tenant
 {
     public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
     public required string Name { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
-    public DateTime? DeletedAtUtc { get; set; }
 }

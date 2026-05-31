@@ -1,4 +1,5 @@
 using Application.Accounts.Interfaces;
+using Application.Auth.Interfaces;
 using Application.MonthlyClosing.DTOs;
 using Application.MonthlyClosing.Interfaces;
 using Application.MonthlyClosing.UseCases;
@@ -11,6 +12,14 @@ namespace Application.Tests.MonthlyClosing;
 
 public class CreateMonthlyClosingUseCaseTests
 {
+    private static Mock<ICurrentUserContext> CreateCurrentUserMock()
+    {
+        var mock = new Mock<ICurrentUserContext>();
+        mock.Setup(x => x.TenantId).Returns(Guid.NewGuid());
+        mock.Setup(x => x.UserId).Returns(Guid.NewGuid());
+        return mock;
+    }
+
     [Fact]
     public async Task CreateMonthlyClosing_WithMultipleAccounts_ShouldCalculateEqualDivision()
     {
@@ -58,7 +67,7 @@ public class CreateMonthlyClosingUseCaseTests
             .Setup(x => x.GetLatestByYearMonthAsync(2026, 5))
             .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
 
-        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
+        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object, CreateCurrentUserMock().Object);
 
         var result = await useCase.ExecuteAsync(
             new CreateMonthlyClosingRequest(
@@ -119,7 +128,7 @@ public class CreateMonthlyClosingUseCaseTests
             .Setup(x => x.GetLatestByYearMonthAsync(2026, 5))
             .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
 
-        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
+        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object, CreateCurrentUserMock().Object);
 
         var result = await useCase.ExecuteAsync(
             new CreateMonthlyClosingRequest(
@@ -152,7 +161,7 @@ public class CreateMonthlyClosingUseCaseTests
             .Setup(x => x.GetLatestByYearMonthAsync(2026, 5))
             .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
 
-        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
+        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object, CreateCurrentUserMock().Object);
 
         var action = async () => await useCase.ExecuteAsync(
             new CreateMonthlyClosingRequest(
@@ -193,7 +202,7 @@ public class CreateMonthlyClosingUseCaseTests
         closingRepositoryMock
             .Setup(x => x.GetLatestByYearMonthAsync(2026, 5))
             .ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
-        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
+        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object, CreateCurrentUserMock().Object);
 
         var result = await useCase.ExecuteAsync(
             new CreateMonthlyClosingRequest(
@@ -245,7 +254,7 @@ public class CreateMonthlyClosingUseCaseTests
                 AmountPerPerson = 0m,
             });
 
-        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
+        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object, CreateCurrentUserMock().Object);
 
         var action = async () => await useCase.ExecuteAsync(
             new CreateMonthlyClosingRequest(
@@ -302,7 +311,7 @@ public class CreateMonthlyClosingUseCaseTests
             .Setup(x => x.GetLatestByYearMonthAsync(2026, 5))
             .ReturnsAsync(reopenedClosing);
 
-        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object);
+        var useCase = new CreateMonthlyClosingUseCase(accountRepositoryMock.Object, closingRepositoryMock.Object, CreateCurrentUserMock().Object);
 
         var result = await useCase.ExecuteAsync(
             new CreateMonthlyClosingRequest(

@@ -3,6 +3,7 @@ namespace Domain.Entities;
 public class Account
 {
     public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
     public required string Name { get; set; }
     public decimal Amount { get; set; }
     public DateTime DueDate { get; set; }

@@ -1,3 +1,4 @@
+using Application.Auth.Interfaces;
 using Application.People.Interfaces;
 using Domain.Entities;
 using Infrastructure.Data;
@@ -8,23 +9,37 @@ namespace Infrastructure.Repositories;
 public class PersonRepository : IPersonRepository
 {
     private readonly IMongoCollection<Person> _people;
+    private readonly ICurrentUserContext _currentUser;
 
-    public PersonRepository(AppDbContext context)
+    public PersonRepository(AppDbContext context, ICurrentUserContext currentUser)
     {
         _people = context.People;
+        _currentUser = currentUser;
     }
+
+    private FilterDefinition<Person> TenantFilter()
+        => _currentUser.TenantId.HasValue
+            ? Builders<Person>.Filter.Eq(x => x.TenantId, _currentUser.TenantId.Value)
+            : Builders<Person>.Filter.Empty;
 
     public async Task<IReadOnlyCollection<Person>> GetAllAsync()
     {
+        var filter = Builders<Person>.Filter.And(
+            TenantFilter(),
+            Builders<Person>.Filter.Eq(x => x.DeletedAtUtc, null));
+
         return await _people
-            .Find(x => x.DeletedAtUtc == null)
+            .Find(filter)
             .SortBy(x => x.Name)
             .ToListAsync();
     }
 
     public async Task<Person?> GetByIdAsync(Guid id)
     {
-        return await _people.Find(x => x.Id == id).FirstOrDefaultAsync();
+        var filter = Builders<Person>.Filter.And(
+            TenantFilter(),
+            Builders<Person>.Filter.Eq(x => x.Id, id));
+        return await _people.Find(filter).FirstOrDefaultAsync();
     }
 
     public async Task<IReadOnlyCollection<Person>> GetByIdsAsync(IReadOnlyCollection<Guid> ids)
@@ -34,9 +49,12 @@ public class PersonRepository : IPersonRepository
             return [];
         }
 
-        return await _people
-            .Find(x => ids.Contains(x.Id) && x.DeletedAtUtc == null)
-            .ToListAsync();
+        var filter = Builders<Person>.Filter.And(
+            TenantFilter(),
+            Builders<Person>.Filter.In(x => x.Id, ids),
+            Builders<Person>.Filter.Eq(x => x.DeletedAtUtc, null));
+
+        return await _people.Find(filter).ToListAsync();
     }
 
     public async Task CreateAsync(Person person)

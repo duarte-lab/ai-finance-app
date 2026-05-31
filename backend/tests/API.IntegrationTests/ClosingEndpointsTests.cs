@@ -20,7 +20,7 @@ public class ClosingEndpointsTests : IClassFixture<CustomWebApplicationFactory>
 
     public ClosingEndpointsTests(CustomWebApplicationFactory factory)
     {
-        _client = factory.CreateApiClient();
+        _client = factory.CreateAuthenticatedApiClient();
     }
 
     [Fact]

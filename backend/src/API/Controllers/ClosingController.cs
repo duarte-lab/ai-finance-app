@@ -1,9 +1,11 @@
 using Application.MonthlyClosing.DTOs;
 using Application.MonthlyClosing.UseCases;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("closing")]
 public class ClosingController : ControllerBase

@@ -1,4 +1,5 @@
 using Application.Accounts.Interfaces;
+using Application.Auth.Interfaces;
 using Application.MonthlyClosing.DTOs;
 using Application.MonthlyClosing.Interfaces;
 using Domain.Entities;
@@ -9,13 +10,16 @@ public class CreateMonthlyClosingUseCase
 {
     private readonly IAccountRepository _accountRepository;
     private readonly IMonthlyClosingRepository _monthlyClosingRepository;
+    private readonly ICurrentUserContext _currentUser;
 
     public CreateMonthlyClosingUseCase(
         IAccountRepository accountRepository,
-        IMonthlyClosingRepository monthlyClosingRepository)
+        IMonthlyClosingRepository monthlyClosingRepository,
+        ICurrentUserContext currentUser)
     {
         _accountRepository = accountRepository;
         _monthlyClosingRepository = monthlyClosingRepository;
+        _currentUser = currentUser;
     }
 
     public async Task<MonthlyClosingResponse> ExecuteAsync(CreateMonthlyClosingRequest request)
@@ -96,6 +100,7 @@ public class CreateMonthlyClosingUseCase
             closing = new Domain.Entities.MonthlyClosing
             {
                 Id = Guid.NewGuid(),
+                TenantId = _currentUser.TenantId ?? Guid.Empty,
                 Year = request.Year,
                 Month = request.Month,
                 AccountIds = [],

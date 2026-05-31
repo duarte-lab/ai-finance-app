@@ -1,3 +1,4 @@
+using Application.Auth.Interfaces;
 using Application.People.DTOs;
 using Application.People.Interfaces;
 using Application.People.UseCases;
@@ -10,11 +11,19 @@ namespace Application.Tests.People;
 
 public class PeopleUseCasesTests
 {
+    private static Mock<ICurrentUserContext> CreateCurrentUserMock()
+    {
+        var mock = new Mock<ICurrentUserContext>();
+        mock.Setup(x => x.TenantId).Returns(Guid.NewGuid());
+        mock.Setup(x => x.UserId).Returns(Guid.NewGuid());
+        return mock;
+    }
+
     [Fact]
     public async Task CreatePerson_ValidRequest_ShouldCreateWithUtcDate()
     {
         var repositoryMock = new Mock<IPersonRepository>();
-        var useCase = new CreatePersonUseCase(repositoryMock.Object);
+        var useCase = new CreatePersonUseCase(repositoryMock.Object, CreateCurrentUserMock().Object);
 
         var result = await useCase.ExecuteAsync(new CreatePersonRequest("Ana"));
 
@@ -33,7 +42,7 @@ public class PeopleUseCasesTests
     public async Task CreatePerson_NameLongerThan50_ShouldThrowArgumentException()
     {
         var repositoryMock = new Mock<IPersonRepository>();
-        var useCase = new CreatePersonUseCase(repositoryMock.Object);
+        var useCase = new CreatePersonUseCase(repositoryMock.Object, CreateCurrentUserMock().Object);
         var invalidName = new string('A', 51);
 
         Func<Task> act = async () => await useCase.ExecuteAsync(new CreatePersonRequest(invalidName));

@@ -1,6 +1,7 @@
 using Application.Accounts.DTOs;
 using Application.Accounts.Interfaces;
 using Application.Accounts.UseCases;
+using Application.Auth.Interfaces;
 using Domain.Entities;
 using FluentAssertions;
 using Moq;
@@ -10,11 +11,19 @@ namespace Application.Tests.Accounts;
 
 public class AccountsUseCasesTests
 {
+    private static Mock<ICurrentUserContext> CreateCurrentUserMock()
+    {
+        var mock = new Mock<ICurrentUserContext>();
+        mock.Setup(x => x.TenantId).Returns(Guid.NewGuid());
+        mock.Setup(x => x.UserId).Returns(Guid.NewGuid());
+        return mock;
+    }
+
     [Fact]
     public async Task CreateAccount_ValidRequest_CreatesWithPaidFalseAndUtcDate()
     {
         var repositoryMock = new Mock<IAccountRepository>();
-        var useCase = new CreateAccountUseCase(repositoryMock.Object);
+        var useCase = new CreateAccountUseCase(repositoryMock.Object, CreateCurrentUserMock().Object);
         var dueDate = new DateTime(2026, 5, 10, 10, 0, 0, DateTimeKind.Local);
 
         var result = await useCase.ExecuteAsync(new CreateAccountRequest("Internet", 120.50m, dueDate));
@@ -38,7 +47,7 @@ public class AccountsUseCasesTests
     public async Task CreateAccount_NegativeAmount_ThrowsArgumentException()
     {
         var repositoryMock = new Mock<IAccountRepository>();
-        var useCase = new CreateAccountUseCase(repositoryMock.Object);
+        var useCase = new CreateAccountUseCase(repositoryMock.Object, CreateCurrentUserMock().Object);
 
         var action = async () => await useCase.ExecuteAsync(
             new CreateAccountRequest("Rent", -1m, DateTime.UtcNow));
@@ -51,7 +60,7 @@ public class AccountsUseCasesTests
     public async Task CreateAccount_RetroactiveDueDate_ShouldAllowCreation()
     {
         var repositoryMock = new Mock<IAccountRepository>();
-        var useCase = new CreateAccountUseCase(repositoryMock.Object);
+        var useCase = new CreateAccountUseCase(repositoryMock.Object, CreateCurrentUserMock().Object);
         var pastDueDate = DateTime.UtcNow.AddDays(-30);
 
         var result = await useCase.ExecuteAsync(new CreateAccountRequest("Past bill", 50m, pastDueDate));
