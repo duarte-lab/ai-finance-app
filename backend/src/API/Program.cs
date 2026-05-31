@@ -41,8 +41,30 @@ builder.Services
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? ["http://localhost:3000"];
+string[] SplitOrigins(string? raw)
+    => string.IsNullOrWhiteSpace(raw)
+        ? []
+        : raw.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+string NormalizeOrigin(string origin) => origin.Trim().TrimEnd('/');
+
+var sectionOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+var keyOrigins = SplitOrigins(builder.Configuration["Cors:AllowedOrigins"]);
+var envOrigins = SplitOrigins(Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS"));
+
+var allowedOrigins = sectionOrigins
+    .Concat(keyOrigins)
+    .Concat(envOrigins)
+    .Select(NormalizeOrigin)
+    .Where(origin => !string.IsNullOrWhiteSpace(origin))
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray();
+
+if (allowedOrigins.Length == 0)
+{
+    allowedOrigins = ["http://localhost:3000"];
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy =>
