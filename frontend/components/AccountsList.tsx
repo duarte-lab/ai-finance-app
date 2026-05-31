@@ -14,12 +14,14 @@ interface AccountsListProps {
   initialAccounts: Account[];
   initialYear: number;
   initialMonth: number;
+  token?: string;
 }
 
 export function AccountsList({
   initialAccounts,
   initialYear,
   initialMonth,
+  token,
 }: AccountsListProps) {
   const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
   const [year, setYear] = useState<number>(initialYear);
@@ -41,7 +43,7 @@ export function AccountsList({
     setError(null);
 
     try {
-      const filtered = await getAccounts({ year, month });
+      const filtered = await getAccounts({ year, month }, token);
       setAccounts(filtered);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to filter accounts.");
@@ -55,7 +57,7 @@ export function AccountsList({
     setError(null);
 
     try {
-      const updated = await markAccountAsPaid(id);
+      const updated = await markAccountAsPaid(id, token);
       setAccounts((prev) => prev.map((item) => (item.id === id ? updated : item)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to pay account.");
@@ -74,7 +76,7 @@ export function AccountsList({
         amount: Number(amount),
         dueDate: new Date(`${dueDate}T00:00:00.000Z`).toISOString(),
         participatesInDivision: false,
-      });
+      }, token);
 
       setAccounts((prev) => [created, ...prev]);
       setName("");
@@ -102,7 +104,7 @@ export function AccountsList({
         dueDate: new Date(`${editDueDate}T00:00:00.000Z`).toISOString(),
         paid: account.paid,
         participatesInDivision: account.participatesInDivision,
-      });
+      }, token);
 
       setAccounts((prev) => prev.map((item) => (item.id === account.id ? updated : item)));
       setEditingAccountId(null);
@@ -119,6 +121,7 @@ export function AccountsList({
       const updated = await updateAccountDivisionParticipation(
         account.id,
         !account.participatesInDivision,
+        token,
       );
       setAccounts((prev) => prev.map((item) => (item.id === account.id ? updated : item)));
     } catch (err) {

@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { AuthSessionProvider } from "@/components/AuthSessionProvider";
 import { MainNavigation } from "@/components/MainNavigation";
 import "./globals.css";
 
@@ -18,19 +21,23 @@ export const metadata: Metadata = {
   description: "Sistema para controle de contas domesticas",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerSession(authOptions);
+
   return (
     <html
       lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
-        <MainNavigation />
-        {children}
+        <AuthSessionProvider session={session}>
+          <MainNavigation />
+          {children}
+        </AuthSessionProvider>
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import { createPerson, deletePerson, Person } from "@/services/api";
 
 interface PeopleManagerProps {
   initialPeople: Person[];
+  token?: string;
 }
 
 function formatDate(value: string): string {
@@ -12,7 +13,7 @@ function formatDate(value: string): string {
   return Number.isNaN(date.getTime()) ? value : date.toISOString().slice(0, 10);
 }
 
-export function PeopleManager({ initialPeople }: PeopleManagerProps) {
+export function PeopleManager({ initialPeople, token }: PeopleManagerProps) {
   const [people, setPeople] = useState<Person[]>(
     [...initialPeople].sort((a, b) => a.name.localeCompare(b.name)),
   );
@@ -27,7 +28,7 @@ export function PeopleManager({ initialPeople }: PeopleManagerProps) {
 
     try {
       setIsCreating(true);
-      const created = await createPerson(name);
+      const created = await createPerson(name, token);
       setPeople((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
       setName("");
     } catch (err) {
@@ -42,7 +43,7 @@ export function PeopleManager({ initialPeople }: PeopleManagerProps) {
 
     try {
       setDeletingId(id);
-      await deletePerson(id);
+      await deletePerson(id, token);
       setPeople((prev) => prev.filter((person) => person.id !== id));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Falha ao excluir pessoa.");

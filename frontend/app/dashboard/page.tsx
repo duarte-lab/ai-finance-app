@@ -1,16 +1,18 @@
 import { DashboardSummaryView } from "@/components/DashboardSummaryView";
+import { getBackendToken } from "@/lib/session";
 import { getDashboardSummary, getDueNotifications } from "@/services/api";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const token = await getBackendToken();
   const now = new Date();
   const year = now.getUTCFullYear();
   const month = now.getUTCMonth() + 1;
 
   const [summary, notifications] = await Promise.all([
-    getDashboardSummary({ year, month }),
-    getDueNotifications(),
+    getDashboardSummary({ year, month }, token),
+    getDueNotifications(token),
   ]);
 
   return (

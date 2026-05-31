@@ -6,6 +6,12 @@ function getApiBaseUrl(): string {
   return typeof window === "undefined" ? serverApiBaseUrl : browserApiBaseUrl;
 }
 
+function buildHeaders(token?: string, extra?: Record<string, string>): HeadersInit {
+  const headers: Record<string, string> = { ...extra };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+}
+
 export interface Account {
   id: string;
   name: string;
@@ -98,7 +104,7 @@ interface GetAccountsFilter {
   month?: number;
 }
 
-export async function getAccounts(filter?: GetAccountsFilter): Promise<Account[]> {
+export async function getAccounts(filter?: GetAccountsFilter, token?: string): Promise<Account[]> {
   const url = new URL(`${getApiBaseUrl()}/api/accounts`);
 
   if (filter?.year && filter?.month) {
@@ -106,7 +112,10 @@ export async function getAccounts(filter?: GetAccountsFilter): Promise<Account[]
     url.searchParams.set("month", String(filter.month));
   }
 
-  const res = await fetch(url.toString(), { cache: "no-store" });
+  const res = await fetch(url.toString(), {
+    cache: "no-store",
+    headers: buildHeaders(token),
+  });
 
   if (!res.ok) {
     throw new Error(`Failed to fetch accounts: ${res.status}`);
@@ -115,10 +124,10 @@ export async function getAccounts(filter?: GetAccountsFilter): Promise<Account[]
   return (await res.json()) as Account[];
 }
 
-export async function markAccountAsPaid(id: string): Promise<Account> {
+export async function markAccountAsPaid(id: string, token?: string): Promise<Account> {
   const res = await fetch(`${getApiBaseUrl()}/api/accounts/${id}/pay`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: buildHeaders(token, { "Content-Type": "application/json" }),
   });
 
   if (!res.ok) {
@@ -128,10 +137,10 @@ export async function markAccountAsPaid(id: string): Promise<Account> {
   return (await res.json()) as Account;
 }
 
-export async function createAccount(request: CreateAccountRequest): Promise<Account> {
+export async function createAccount(request: CreateAccountRequest, token?: string): Promise<Account> {
   const res = await fetch(`${getApiBaseUrl()}/api/accounts`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: buildHeaders(token, { "Content-Type": "application/json" }),
     body: JSON.stringify(request),
   });
 
@@ -142,10 +151,10 @@ export async function createAccount(request: CreateAccountRequest): Promise<Acco
   return (await res.json()) as Account;
 }
 
-export async function updateAccount(id: string, request: UpdateAccountRequest): Promise<Account> {
+export async function updateAccount(id: string, request: UpdateAccountRequest, token?: string): Promise<Account> {
   const res = await fetch(`${getApiBaseUrl()}/api/accounts/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: buildHeaders(token, { "Content-Type": "application/json" }),
     body: JSON.stringify(request),
   });
 
@@ -159,10 +168,11 @@ export async function updateAccount(id: string, request: UpdateAccountRequest): 
 export async function updateAccountDivisionParticipation(
   id: string,
   participatesInDivision: boolean,
+  token?: string,
 ): Promise<Account> {
   const res = await fetch(`${getApiBaseUrl()}/api/accounts/${id}/division-participation`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: buildHeaders(token, { "Content-Type": "application/json" }),
     body: JSON.stringify({ participatesInDivision }),
   });
 
@@ -173,8 +183,11 @@ export async function updateAccountDivisionParticipation(
   return (await res.json()) as Account;
 }
 
-export async function getPeople(): Promise<Person[]> {
-  const res = await fetch(`${getApiBaseUrl()}/api/people`, { cache: "no-store" });
+export async function getPeople(token?: string): Promise<Person[]> {
+  const res = await fetch(`${getApiBaseUrl()}/api/people`, {
+    cache: "no-store",
+    headers: buildHeaders(token),
+  });
 
   if (!res.ok) {
     throw new Error(`Failed to fetch people: ${res.status}`);
@@ -183,10 +196,10 @@ export async function getPeople(): Promise<Person[]> {
   return (await res.json()) as Person[];
 }
 
-export async function createPerson(name: string): Promise<Person> {
+export async function createPerson(name: string, token?: string): Promise<Person> {
   const res = await fetch(`${getApiBaseUrl()}/api/people`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: buildHeaders(token, { "Content-Type": "application/json" }),
     body: JSON.stringify({ name }),
   });
 
@@ -197,10 +210,10 @@ export async function createPerson(name: string): Promise<Person> {
   return (await res.json()) as Person;
 }
 
-export async function deletePerson(id: string): Promise<void> {
+export async function deletePerson(id: string, token?: string): Promise<void> {
   const res = await fetch(`${getApiBaseUrl()}/api/people/${id}`, {
     method: "DELETE",
-    headers: { "Content-Type": "application/json" },
+    headers: buildHeaders(token, { "Content-Type": "application/json" }),
   });
 
   if (!res.ok) {
@@ -210,6 +223,7 @@ export async function deletePerson(id: string): Promise<void> {
 
 export async function getDashboardSummary(
   filter?: GetAccountsFilter,
+  token?: string,
 ): Promise<DashboardSummary> {
   const url = new URL(`${getApiBaseUrl()}/api/dashboard/summary`);
 
@@ -221,7 +235,10 @@ export async function getDashboardSummary(
     url.searchParams.set("month", String(filter.month));
   }
 
-  const res = await fetch(url.toString(), { cache: "no-store" });
+  const res = await fetch(url.toString(), {
+    cache: "no-store",
+    headers: buildHeaders(token),
+  });
 
   if (!res.ok) {
     throw new Error(`Failed to fetch dashboard summary: ${res.status}`);
@@ -232,10 +249,11 @@ export async function getDashboardSummary(
 
 export async function createMonthlyClosing(
   request: CreateMonthlyClosingRequest,
+  token?: string,
 ): Promise<MonthlyClosingResult> {
   const res = await fetch(`${getApiBaseUrl()}/closing`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: buildHeaders(token, { "Content-Type": "application/json" }),
     body: JSON.stringify(request),
   });
 
@@ -249,12 +267,16 @@ export async function createMonthlyClosing(
 export async function getMonthlyClosing(
   year: number,
   month: number,
+  token?: string,
 ): Promise<MonthlyClosingResult | null> {
   const url = new URL(`${getApiBaseUrl()}/closing`);
   url.searchParams.set("year", String(year));
   url.searchParams.set("month", String(month));
 
-  const res = await fetch(url.toString(), { cache: "no-store" });
+  const res = await fetch(url.toString(), {
+    cache: "no-store",
+    headers: buildHeaders(token),
+  });
 
   if (res.status === 404) {
     return null;
@@ -269,10 +291,11 @@ export async function getMonthlyClosing(
 
 export async function reopenMonthlyClosing(
   request: ReopenMonthlyClosingRequest,
+  token?: string,
 ): Promise<MonthlyClosingResult> {
   const res = await fetch(`${getApiBaseUrl()}/closing/reopen`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: buildHeaders(token, { "Content-Type": "application/json" }),
     body: JSON.stringify(request),
   });
 
@@ -283,8 +306,11 @@ export async function reopenMonthlyClosing(
   return (await res.json()) as MonthlyClosingResult;
 }
 
-export async function getDueNotifications(): Promise<DueNotification[]> {
-  const res = await fetch(`${getApiBaseUrl()}/api/notifications/due`, { cache: "no-store" });
+export async function getDueNotifications(token?: string): Promise<DueNotification[]> {
+  const res = await fetch(`${getApiBaseUrl()}/api/notifications/due`, {
+    cache: "no-store",
+    headers: buildHeaders(token),
+  });
 
   if (!res.ok) {
     throw new Error(`Failed to fetch due notifications: ${res.status}`);

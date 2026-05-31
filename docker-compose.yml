@@ -10,9 +10,13 @@ services:
     build: ./frontend
     depends_on:
       - backend
+    env_file:
+      - ./frontend/.env.local
     environment:
       API_BASE_URL: http://backend:8080
       NEXT_PUBLIC_API_BASE_URL: http://localhost:5000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-L88k9+B7cH67VcgmrKvRXHYxQ4u+7gta1PU6XminpGE=}
+      NEXTAUTH_URL: http://localhost:3000
     ports:
       - "3000:3000"
 

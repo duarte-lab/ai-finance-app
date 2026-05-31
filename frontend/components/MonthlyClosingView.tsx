@@ -17,6 +17,7 @@ interface MonthlyClosingViewProps {
   initialClosing: MonthlyClosingResult | null;
   initialYear: number;
   initialMonth: number;
+  token?: string;
 }
 
 function formatCurrency(value: number): string {
@@ -38,6 +39,7 @@ export function MonthlyClosingView({
   initialClosing,
   initialYear,
   initialMonth,
+  token,
 }: MonthlyClosingViewProps) {
   const [year, setYear] = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
@@ -71,8 +73,8 @@ export function MonthlyClosingView({
 
     try {
       const [monthAccounts, monthClosing] = await Promise.all([
-        getAccounts({ year, month }),
-        getMonthlyClosing(year, month),
+        getAccounts({ year, month }, token),
+        getMonthlyClosing(year, month, token),
       ]);
 
       setAccounts(monthAccounts);
@@ -126,11 +128,11 @@ export function MonthlyClosingView({
         month,
         accountIds: selectedAccountIds,
         participants: selectedParticipants,
-      });
+      }, token);
 
-  setCurrentClosing(payload);
-  setSuccessMessage("Mes fechado com sucesso.");
-      const refreshed = await getAccounts({ year, month });
+      setCurrentClosing(payload);
+      setSuccessMessage("Mes fechado com sucesso.");
+      const refreshed = await getAccounts({ year, month }, token);
       setAccounts(refreshed);
       setSelectedAccountIds(defaultSelectedAccountIds(refreshed));
     } catch (err) {
@@ -146,9 +148,9 @@ export function MonthlyClosingView({
     setSuccessMessage(null);
 
     try {
-      await reopenMonthlyClosing({ year, month });
+      await reopenMonthlyClosing({ year, month }, token);
 
-      const refreshed = await getAccounts({ year, month });
+      const refreshed = await getAccounts({ year, month }, token);
       setAccounts(refreshed);
       setSelectedAccountIds(defaultSelectedAccountIds(refreshed));
       setCurrentClosing(null);
