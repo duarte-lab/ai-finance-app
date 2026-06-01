@@ -10,6 +10,7 @@ import {
   getMonthlyClosing,
   reopenMonthlyClosing,
 } from "@/services/api";
+import { handleApiError } from "@/lib/client-auth";
 
 interface MonthlyClosingViewProps {
   initialAccounts: Account[];
@@ -82,7 +83,8 @@ export function MonthlyClosingView({
       setCurrentClosing(monthClosing);
       setSelectedParticipants(monthClosing?.participants ?? people.map((person) => person.name));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load monthly accounts.");
+      const message = handleApiError(err, "Failed to load monthly accounts.");
+      if (message) setError(message);
     } finally {
       setIsFiltering(false);
     }
@@ -136,7 +138,8 @@ export function MonthlyClosingView({
       setAccounts(refreshed);
       setSelectedAccountIds(defaultSelectedAccountIds(refreshed));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to close month.");
+      const message = handleApiError(err, "Failed to close month.");
+      if (message) setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -157,7 +160,8 @@ export function MonthlyClosingView({
       setSelectedParticipants(people.map((person) => person.name));
       setSuccessMessage("Mes reaberto com sucesso.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to reopen month.");
+      const message = handleApiError(err, "Failed to reopen month.");
+      if (message) setError(message);
     } finally {
       setIsReopening(false);
     }

@@ -2,6 +2,17 @@ const serverApiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:5000";
 const browserApiBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? serverApiBaseUrl;
 
+export class UnauthorizedApiError extends Error {
+  constructor(message = "Session expired. Please sign in again.") {
+    super(message);
+    this.name = "UnauthorizedApiError";
+  }
+}
+
+export function isUnauthorizedApiError(error: unknown): error is UnauthorizedApiError {
+  return error instanceof UnauthorizedApiError;
+}
+
 function getApiBaseUrl(): string {
   return typeof window === "undefined" ? serverApiBaseUrl : browserApiBaseUrl;
 }
@@ -10,6 +21,16 @@ function buildHeaders(token?: string, extra?: Record<string, string>): HeadersIn
   const headers: Record<string, string> = { ...extra };
   if (token) headers["Authorization"] = `Bearer ${token}`;
   return headers;
+}
+
+function ensureApiSuccess(response: Response, operation: string): void {
+  if (response.status === 401) {
+    throw new UnauthorizedApiError();
+  }
+
+  if (!response.ok) {
+    throw new Error(`${operation}: ${response.status}`);
+  }
 }
 
 export interface Account {
@@ -117,9 +138,7 @@ export async function getAccounts(filter?: GetAccountsFilter, token?: string): P
     headers: buildHeaders(token),
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch accounts: ${res.status}`);
-  }
+  ensureApiSuccess(res, "Failed to fetch accounts");
 
   return (await res.json()) as Account[];
 }
@@ -130,9 +149,7 @@ export async function markAccountAsPaid(id: string, token?: string): Promise<Acc
     headers: buildHeaders(token, { "Content-Type": "application/json" }),
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to mark account as paid: ${res.status}`);
-  }
+  ensureApiSuccess(res, "Failed to mark account as paid");
 
   return (await res.json()) as Account;
 }
@@ -144,9 +161,7 @@ export async function createAccount(request: CreateAccountRequest, token?: strin
     body: JSON.stringify(request),
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to create account: ${res.status}`);
-  }
+  ensureApiSuccess(res, "Failed to create account");
 
   return (await res.json()) as Account;
 }
@@ -158,9 +173,7 @@ export async function updateAccount(id: string, request: UpdateAccountRequest, t
     body: JSON.stringify(request),
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to update account: ${res.status}`);
-  }
+  ensureApiSuccess(res, "Failed to update account");
 
   return (await res.json()) as Account;
 }
@@ -176,9 +189,7 @@ export async function updateAccountDivisionParticipation(
     body: JSON.stringify({ participatesInDivision }),
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to update account division participation: ${res.status}`);
-  }
+  ensureApiSuccess(res, "Failed to update account division participation");
 
   return (await res.json()) as Account;
 }
@@ -189,9 +200,7 @@ export async function getPeople(token?: string): Promise<Person[]> {
     headers: buildHeaders(token),
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch people: ${res.status}`);
-  }
+  ensureApiSuccess(res, "Failed to fetch people");
 
   return (await res.json()) as Person[];
 }
@@ -203,9 +212,7 @@ export async function createPerson(name: string, token?: string): Promise<Person
     body: JSON.stringify({ name }),
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to create person: ${res.status}`);
-  }
+  ensureApiSuccess(res, "Failed to create person");
 
   return (await res.json()) as Person;
 }
@@ -216,9 +223,7 @@ export async function deletePerson(id: string, token?: string): Promise<void> {
     headers: buildHeaders(token, { "Content-Type": "application/json" }),
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to delete person: ${res.status}`);
-  }
+  ensureApiSuccess(res, "Failed to delete person");
 }
 
 export async function getDashboardSummary(
@@ -240,9 +245,7 @@ export async function getDashboardSummary(
     headers: buildHeaders(token),
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch dashboard summary: ${res.status}`);
-  }
+  ensureApiSuccess(res, "Failed to fetch dashboard summary");
 
   return (await res.json()) as DashboardSummary;
 }
@@ -257,9 +260,7 @@ export async function createMonthlyClosing(
     body: JSON.stringify(request),
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to create monthly closing: ${res.status}`);
-  }
+  ensureApiSuccess(res, "Failed to create monthly closing");
 
   return (await res.json()) as MonthlyClosingResult;
 }
@@ -282,9 +283,7 @@ export async function getMonthlyClosing(
     return null;
   }
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch monthly closing: ${res.status}`);
-  }
+  ensureApiSuccess(res, "Failed to fetch monthly closing");
 
   return (await res.json()) as MonthlyClosingResult;
 }
@@ -299,9 +298,7 @@ export async function reopenMonthlyClosing(
     body: JSON.stringify(request),
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to reopen monthly closing: ${res.status}`);
-  }
+  ensureApiSuccess(res, "Failed to reopen monthly closing");
 
   return (await res.json()) as MonthlyClosingResult;
 }
@@ -312,9 +309,7 @@ export async function getDueNotifications(token?: string): Promise<DueNotificati
     headers: buildHeaders(token),
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch due notifications: ${res.status}`);
-  }
+  ensureApiSuccess(res, "Failed to fetch due notifications");
 
   return (await res.json()) as DueNotification[];
 }

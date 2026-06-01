@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { DashboardSummary, DueNotification, getDashboardSummary } from "@/services/api";
+import { handleApiError } from "@/lib/client-auth";
 
 interface DashboardSummaryViewProps {
   initialSummary: DashboardSummary;
   initialNotifications: DueNotification[];
   initialYear: number;
   initialMonth: number;
+  token?: string;
 }
 
 function currency(value: number): string {
@@ -30,6 +32,7 @@ export function DashboardSummaryView({
   initialNotifications,
   initialYear,
   initialMonth,
+  token,
 }: DashboardSummaryViewProps) {
   const [summary, setSummary] = useState<DashboardSummary>(initialSummary);
   const [notifications] = useState<DueNotification[]>(initialNotifications);
@@ -43,10 +46,11 @@ export function DashboardSummaryView({
     setError(null);
 
     try {
-      const nextSummary = await getDashboardSummary({ year, month });
+      const nextSummary = await getDashboardSummary({ year, month }, token);
       setSummary(nextSummary);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to filter dashboard.");
+      const message = handleApiError(err, "Failed to filter dashboard.");
+      if (message) setError(message);
     } finally {
       setIsLoading(false);
     }

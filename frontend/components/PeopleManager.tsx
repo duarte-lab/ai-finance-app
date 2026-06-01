@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createPerson, deletePerson, Person } from "@/services/api";
+import { handleApiError } from "@/lib/client-auth";
 
 interface PeopleManagerProps {
   initialPeople: Person[];
@@ -32,7 +33,8 @@ export function PeopleManager({ initialPeople, token }: PeopleManagerProps) {
       setPeople((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
       setName("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Falha ao criar pessoa.");
+      const message = handleApiError(err, "Falha ao criar pessoa.");
+      if (message) setError(message);
     } finally {
       setIsCreating(false);
     }
@@ -46,7 +48,8 @@ export function PeopleManager({ initialPeople, token }: PeopleManagerProps) {
       await deletePerson(id, token);
       setPeople((prev) => prev.filter((person) => person.id !== id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Falha ao excluir pessoa.");
+      const message = handleApiError(err, "Falha ao excluir pessoa.");
+      if (message) setError(message);
     } finally {
       setDeletingId(null);
     }

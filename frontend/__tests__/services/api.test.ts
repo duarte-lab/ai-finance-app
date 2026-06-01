@@ -9,6 +9,7 @@ import {
   getAccounts,
   getDashboardSummary,
   getPeople,
+  UnauthorizedApiError,
   markAccountAsPaid,
   updateAccount,
   updateAccountDivisionParticipation,
@@ -52,7 +53,7 @@ describe("services/api", () => {
     expect(result).toEqual(payload);
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/accounts?year=2026&month=5"),
-      { cache: "no-store" },
+      { cache: "no-store", headers: {} },
     );
   });
 
@@ -193,7 +194,7 @@ describe("services/api", () => {
     expect(result).toEqual(payload);
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/dashboard/summary?year=2026&month=5"),
-      { cache: "no-store" },
+      { cache: "no-store", headers: {} },
     );
   });
 
@@ -241,7 +242,7 @@ describe("services/api", () => {
     expect(result).toEqual(payload);
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/people"),
-      { cache: "no-store" },
+      { cache: "no-store", headers: {} },
     );
   });
 
@@ -297,7 +298,7 @@ describe("services/api", () => {
     expect(result).toEqual(payload);
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/notifications/due"),
-      { cache: "no-store" },
+      { cache: "no-store", headers: {} },
     );
   });
 
@@ -355,7 +356,16 @@ describe("services/api", () => {
     expect(result).toEqual(payload);
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/closing?year=2026&month=5"),
-      { cache: "no-store" },
+      { cache: "no-store", headers: {} },
     );
+  });
+
+  it("getPeople should throw UnauthorizedApiError on 401", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 401,
+    });
+
+    await expect(getPeople("token")).rejects.toBeInstanceOf(UnauthorizedApiError);
   });
 });

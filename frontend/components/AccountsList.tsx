@@ -9,6 +9,7 @@ import {
   updateAccount,
   updateAccountDivisionParticipation,
 } from "@/services/api";
+import { handleApiError } from "@/lib/client-auth";
 
 interface AccountsListProps {
   initialAccounts: Account[];
@@ -46,7 +47,8 @@ export function AccountsList({
       const filtered = await getAccounts({ year, month }, token);
       setAccounts(filtered);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to filter accounts.");
+      const message = handleApiError(err, "Failed to filter accounts.");
+      if (message) setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +62,8 @@ export function AccountsList({
       const updated = await markAccountAsPaid(id, token);
       setAccounts((prev) => prev.map((item) => (item.id === id ? updated : item)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to pay account.");
+      const message = handleApiError(err, "Failed to pay account.");
+      if (message) setError(message);
     } finally {
       setPayingId(null);
     }
@@ -83,7 +86,8 @@ export function AccountsList({
       setAmount("");
       setDueDate("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create account.");
+      const message = handleApiError(err, "Failed to create account.");
+      if (message) setError(message);
     }
   }
 
@@ -109,7 +113,8 @@ export function AccountsList({
       setAccounts((prev) => prev.map((item) => (item.id === account.id ? updated : item)));
       setEditingAccountId(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update account.");
+      const message = handleApiError(err, "Failed to update account.");
+      if (message) setError(message);
     }
   }
 
@@ -125,7 +130,8 @@ export function AccountsList({
       );
       setAccounts((prev) => prev.map((item) => (item.id === account.id ? updated : item)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update division participation.");
+      const message = handleApiError(err, "Failed to update division participation.");
+      if (message) setError(message);
     } finally {
       setDivisionUpdatingId(null);
     }

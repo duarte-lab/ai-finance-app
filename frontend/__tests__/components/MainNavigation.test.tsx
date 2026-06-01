@@ -1,6 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { MainNavigation } from "@/components/MainNavigation";
 
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: null }),
+  signOut: jest.fn(),
+}));
+
 describe("MainNavigation", () => {
   it("renders header menu links", () => {
     render(<MainNavigation />);

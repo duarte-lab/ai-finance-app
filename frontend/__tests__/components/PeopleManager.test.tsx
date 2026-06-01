@@ -9,6 +9,8 @@ jest.mock("@/services/api", () => ({
 }));
 
 describe("PeopleManager", () => {
+  const token = "backend-token";
+
   const initialPeople = [
     {
       id: "person-1",
@@ -30,13 +32,13 @@ describe("PeopleManager", () => {
       deletedAtUtc: null,
     });
 
-    render(<PeopleManager initialPeople={initialPeople} />);
+    render(<PeopleManager initialPeople={initialPeople} token={token} />);
 
     fireEvent.change(screen.getByLabelText("Nome da pessoa"), { target: { value: "Bruno" } });
     fireEvent.click(screen.getByRole("button", { name: "Adicionar pessoa" }));
 
     await waitFor(() => {
-      expect(api.createPerson).toHaveBeenCalledWith("Bruno");
+      expect(api.createPerson).toHaveBeenCalledWith("Bruno", token);
       expect(screen.getByText("Bruno")).toBeInTheDocument();
     });
   });
@@ -44,12 +46,12 @@ describe("PeopleManager", () => {
   it("deletes an existing person", async () => {
     (api.deletePerson as jest.Mock).mockResolvedValue(undefined);
 
-    render(<PeopleManager initialPeople={initialPeople} />);
+    render(<PeopleManager initialPeople={initialPeople} token={token} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Excluir" }));
 
     await waitFor(() => {
-      expect(api.deletePerson).toHaveBeenCalledWith("person-1");
+      expect(api.deletePerson).toHaveBeenCalledWith("person-1", token);
       expect(screen.queryByText("Ana")).not.toBeInTheDocument();
     });
   });

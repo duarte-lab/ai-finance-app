@@ -11,6 +11,8 @@ jest.mock("@/services/api", () => ({
 }));
 
 describe("MonthlyClosingView", () => {
+  const token = "backend-token";
+
   const initialAccounts = [
     {
       id: "account-1",
@@ -72,6 +74,7 @@ describe("MonthlyClosingView", () => {
         initialClosing={null}
         initialYear={2026}
         initialMonth={5}
+        token={token}
       />,
     );
 
@@ -84,7 +87,7 @@ describe("MonthlyClosingView", () => {
         month: 5,
         accountIds: ["account-1", "account-2"],
         participants: ["Ana", "Bruno"],
-      });
+      }, token);
       expect(screen.getByText(/resultado do fechamento/i)).toBeInTheDocument();
       expect(screen.getByText(/mes fechado com sucesso/i)).toBeInTheDocument();
     });
@@ -123,13 +126,14 @@ describe("MonthlyClosingView", () => {
         }}
         initialYear={2026}
         initialMonth={5}
+        token={token}
       />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /reabrir mes/i }));
 
     await waitFor(() => {
-      expect(api.reopenMonthlyClosing).toHaveBeenCalledWith({ year: 2026, month: 5 });
+      expect(api.reopenMonthlyClosing).toHaveBeenCalledWith({ year: 2026, month: 5 }, token);
       expect(screen.getByText(/mes reaberto com sucesso/i)).toBeInTheDocument();
     });
   });
@@ -154,6 +158,7 @@ describe("MonthlyClosingView", () => {
         initialClosing={null}
         initialYear={2026}
         initialMonth={5}
+        token={token}
       />,
     );
 
@@ -163,8 +168,8 @@ describe("MonthlyClosingView", () => {
     fireEvent.click(screen.getByRole("button", { name: /buscar contas/i }));
 
     await waitFor(() => {
-      expect(api.getAccounts).toHaveBeenLastCalledWith({ year: 2026, month: 6 });
-      expect(api.getMonthlyClosing).toHaveBeenLastCalledWith(2026, 6);
+      expect(api.getAccounts).toHaveBeenLastCalledWith({ year: 2026, month: 6 }, token);
+      expect(api.getMonthlyClosing).toHaveBeenLastCalledWith(2026, 6, token);
       expect(screen.getByText("Water")).toBeInTheDocument();
       expect(screen.getByText("Pago")).toBeInTheDocument();
     });
@@ -188,6 +193,7 @@ describe("MonthlyClosingView", () => {
         initialClosing={null}
         initialYear={2026}
         initialMonth={5}
+        token={token}
       />,
     );
 
@@ -215,6 +221,7 @@ describe("MonthlyClosingView", () => {
         }}
         initialYear={2026}
         initialMonth={5}
+        token={token}
       />,
     );
 
