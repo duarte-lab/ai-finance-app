@@ -30,6 +30,4 @@ export default async function ClosingPage() {
   } catch (error) {
     redirectToSignInIfUnauthorized(error);
   }
-
-  return null;
 }

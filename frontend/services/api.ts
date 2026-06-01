@@ -1,6 +1,12 @@
-const serverApiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:5000";
-const browserApiBaseUrl =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? serverApiBaseUrl;
+const defaultApiBaseUrl = "http://localhost:5000";
+
+function readEnvUrl(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+const serverApiBaseUrl = readEnvUrl(process.env.API_BASE_URL) ?? defaultApiBaseUrl;
+const browserApiBaseUrl = readEnvUrl(process.env.NEXT_PUBLIC_API_BASE_URL) ?? defaultApiBaseUrl;
 
 export class UnauthorizedApiError extends Error {
   constructor(message = "Session expired. Please sign in again.") {

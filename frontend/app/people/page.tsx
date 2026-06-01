@@ -13,6 +13,4 @@ export default async function PeoplePage() {
   } catch (error) {
     redirectToSignInIfUnauthorized(error);
   }
-
-  return null;
 }
