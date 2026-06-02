@@ -16,6 +16,4 @@ export default async function AccountsPage() {
   } catch (error) {
     redirectToSignInIfUnauthorized(error);
   }
-
-  return null;
 }
