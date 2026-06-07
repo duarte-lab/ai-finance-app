@@ -4,6 +4,7 @@
 Fechar o mês e dividir despesas.
 
 ## Requisitos
+- Navegação de mês deve usar componente independente e reutilizável
 - Selecionar contas do mês
 - Carregar participantes da lista de pessoas
 - Calcular divisão
@@ -38,3 +39,4 @@ Fechar o mês e dividir despesas.
 - Fechamento sem contas (erro)
 - Fechamentos com contas não pagas
 - Fechamento com contas que participam e que não participam da divisão
+- Navegação mensal utiliza componente compartilhado com as telas de dashboard e accounts
