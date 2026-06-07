@@ -18,9 +18,20 @@ jest.mock("next/navigation", () => ({
 }));
 
 describe("SignInPage", () => {
+  const originalFetch = global.fetch;
+
   beforeEach(() => {
     signInMock.mockClear();
     pushMock.mockClear();
+    global.fetch = jest.fn();
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
   });
 
   it("starts google sign in with the callback url from the query string", () => {
@@ -45,6 +56,41 @@ describe("SignInPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /entrar com email/i }));
 
     await waitFor(() => {
+      expect(signInMock).toHaveBeenCalledWith("credentials", {
+        email: "ana@example.com",
+        password: "password-123",
+        callbackUrl: "/dashboard",
+        redirect: false,
+      });
+      expect(pushMock).toHaveBeenCalledWith("/dashboard");
+    });
+  });
+
+  it("registers with email/senha and then signs in", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
+    signInMock.mockResolvedValue({ error: null, url: "/dashboard" });
+
+    render(<SignInPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /criar nova conta/i }));
+
+    fireEvent.change(screen.getByLabelText("Nome"), {
+      target: { value: "Ana" },
+    });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "ana@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Senha"), {
+      target: { value: "password-123" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /registrar com email/i }));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/api/auth/register"),
+        expect.objectContaining({ method: "POST" }),
+      );
       expect(signInMock).toHaveBeenCalledWith("credentials", {
         email: "ana@example.com",
         password: "password-123",

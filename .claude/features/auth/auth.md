@@ -50,6 +50,9 @@ POST /api/auth/google
 ## Frontend
 - Exibir tipo da pessoa apenas para visualização
 - Não permitir definir owner manualmente na tela de pessoas
+- Permitir o usuário logar com email/senha ou Google
+- Permitir o usuário se registrar com email/senha
+- Armazenar JWT e refresh token de forma segura em cookies
 
 ## Testes
 - Registro via email/senha cria User + Pessoa owner

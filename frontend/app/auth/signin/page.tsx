@@ -5,28 +5,28 @@ import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
 
+const browserApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "http://localhost:5000";
+
+type AuthMode = "login" | "register";
+
 function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/";
+  const [mode, setMode] = useState<AuthMode>("login");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleCredentialsSignIn(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
-
+  async function performCredentialsSignIn(currentEmail: string, currentPassword: string) {
     const result = await signIn("credentials", {
-      email,
-      password,
+      email: currentEmail,
+      password: currentPassword,
       callbackUrl,
       redirect: false,
     });
-
-    setIsSubmitting(false);
 
     if (!result || result.error) {
       setError("Email ou senha inválidos.");
@@ -34,6 +34,31 @@ function SignInContent() {
     }
 
     router.push(result.url ?? callbackUrl);
+  }
+
+  async function handleCredentialsSignIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      if (mode === "register") {
+        const registerResponse = await fetch(`${browserApiBaseUrl}/api/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password }),
+        });
+
+        if (!registerResponse.ok) {
+          setError("Falha ao registrar. Verifique os dados informados.");
+          return;
+        }
+      }
+
+      await performCredentialsSignIn(email, password);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -49,6 +74,19 @@ function SignInContent() {
         </div>
 
         <form onSubmit={handleCredentialsSignIn} className="mb-4 space-y-3">
+          {mode === "register" && (
+            <label className="flex flex-col gap-1 text-sm text-slate-700">
+              Nome
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Seu nome"
+                className="rounded-lg border border-slate-300 px-3 py-2"
+              />
+            </label>
+          )}
           <label className="flex flex-col gap-1 text-sm text-slate-700">
             Email
             <input
@@ -76,7 +114,24 @@ function SignInContent() {
             disabled={isSubmitting}
             className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
           >
-            {isSubmitting ? "Entrando..." : "Entrar com email"}
+            {isSubmitting
+              ? mode === "register"
+                ? "Registrando..."
+                : "Entrando..."
+              : mode === "register"
+                ? "Registrar com email"
+                : "Entrar com email"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setMode((prev) => (prev === "login" ? "register" : "login"));
+            }}
+            className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50"
+          >
+            {mode === "login" ? "Criar nova conta" : "Já tenho conta"}
           </button>
         </form>
 
