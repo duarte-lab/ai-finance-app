@@ -1,12 +1,40 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { FormEvent, Suspense, useState } from "react";
 
 function SignInContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/";
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleCredentialsSignIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      callbackUrl,
+      redirect: false,
+    });
+
+    setIsSubmitting(false);
+
+    if (!result || result.error) {
+      setError("Email ou senha inválidos.");
+      return;
+    }
+
+    router.push(result.url ?? callbackUrl);
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -18,6 +46,46 @@ function SignInContent() {
           <p className="mt-2 text-sm text-slate-500">
             Faça login para gerenciar suas finanças
           </p>
+        </div>
+
+        <form onSubmit={handleCredentialsSignIn} className="mb-4 space-y-3">
+          <label className="flex flex-col gap-1 text-sm text-slate-700">
+            Email
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="seu@email.com"
+              className="rounded-lg border border-slate-300 px-3 py-2"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-slate-700">
+            Senha
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Sua senha"
+              className="rounded-lg border border-slate-300 px-3 py-2"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
+          >
+            {isSubmitting ? "Entrando..." : "Entrar com email"}
+          </button>
+        </form>
+
+        {error && <p className="mb-4 text-sm text-rose-700">{error}</p>}
+
+        <div className="mb-4 flex items-center gap-2">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs uppercase tracking-wide text-slate-400">ou</span>
+          <div className="h-px flex-1 bg-slate-200" />
         </div>
 
         <button
