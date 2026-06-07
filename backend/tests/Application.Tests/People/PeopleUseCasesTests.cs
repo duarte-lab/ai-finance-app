@@ -28,12 +28,14 @@ public class PeopleUseCasesTests
         var result = await useCase.ExecuteAsync(new CreatePersonRequest("Ana"));
 
         result.Name.Should().Be("Ana");
+        result.Type.Should().Be(PersonType.Guest);
         result.Id.Should().NotBeEmpty();
         result.CreatedAtUtc.Kind.Should().Be(DateTimeKind.Utc);
 
         repositoryMock.Verify(
             x => x.CreateAsync(It.Is<Person>(p =>
                 p.Name == "Ana" &&
+                p.Type == PersonType.Guest &&
                 p.CreatedAtUtc.Kind == DateTimeKind.Utc)),
             Times.Once);
     }
@@ -150,5 +152,30 @@ public class PeopleUseCasesTests
             p.Id == personId &&
             p.Name == "Nome novo" &&
             p.CreatedAtUtc == createdAt)), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeletePerson_Owner_ShouldThrowInvalidOperationException()
+    {
+        var repositoryMock = new Mock<IPersonRepository>();
+        var personId = Guid.NewGuid();
+        var owner = new Person
+        {
+            Id = personId,
+            Name = "Owner",
+            Type = PersonType.Owner,
+            CreatedAtUtc = DateTime.UtcNow,
+            DeletedAtUtc = null,
+        };
+
+        repositoryMock.Setup(x => x.GetByIdAsync(personId)).ReturnsAsync(owner);
+
+        var useCase = new DeletePersonUseCase(repositoryMock.Object);
+
+        Func<Task> act = async () => await useCase.ExecuteAsync(personId);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        repositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Person>()), Times.Never);
+        repositoryMock.Verify(x => x.DeleteAsync(It.IsAny<Guid>()), Times.Never);
     }
 }

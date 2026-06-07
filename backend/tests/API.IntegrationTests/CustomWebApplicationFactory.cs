@@ -16,7 +16,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
     private IContainer? _mongoContainer;
     private string? _connectionString;
 
-    private const string TestSigningKey = "DEV_TEST_SIGNING_KEY_CHANGE_ME_123456789";
+    private const string TestSigningKey = "APP_LOCAL_SIGNING_KEY_CHANGE_ME_123456789";
     public static readonly Guid TestTenantId = Guid.NewGuid();
     public static readonly Guid TestUserId = Guid.NewGuid();
 

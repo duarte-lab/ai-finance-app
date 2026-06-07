@@ -40,6 +40,6 @@ public class UpdatePersonUseCase
         person.Name = trimmedName;
         await _repository.UpdateAsync(person);
 
-        return new PersonResponse(person.Id, person.Name, person.CreatedAtUtc, person.DeletedAtUtc);
+        return new PersonResponse(person.Id, person.Name, person.Type, person.CreatedAtUtc, person.DeletedAtUtc);
     }
 }

@@ -1,4 +1,5 @@
 using Application.People.Interfaces;
+using Domain.Entities;
 
 namespace Application.People.UseCases;
 
@@ -18,6 +19,11 @@ public class DeletePersonUseCase
         if (person is null)
         {
             throw new KeyNotFoundException("Person not found.");
+        }
+
+        if (person.Type == PersonType.Owner)
+        {
+            throw new InvalidOperationException("Owner person cannot be deleted.");
         }
 
         if (person.DeletedAtUtc is null)

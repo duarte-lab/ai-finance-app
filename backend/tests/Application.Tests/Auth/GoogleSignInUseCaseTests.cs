@@ -14,9 +14,17 @@ public class GoogleSignInUseCaseTests
     private readonly Mock<IUserRepository> _userRepoMock = new();
     private readonly Mock<ITenantRepository> _tenantRepoMock = new();
     private readonly Mock<IJwtGenerator> _jwtGeneratorMock = new();
+    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock = new();
+    private readonly Mock<IOwnerPersonProvisioner> _ownerPersonProvisionerMock = new();
 
     private GoogleSignInUseCase CreateUseCase() =>
-        new(_validatorMock.Object, _userRepoMock.Object, _tenantRepoMock.Object, _jwtGeneratorMock.Object);
+        new(
+            _validatorMock.Object,
+            _userRepoMock.Object,
+            _tenantRepoMock.Object,
+            _jwtGeneratorMock.Object,
+            _refreshTokenRepositoryMock.Object,
+            _ownerPersonProvisionerMock.Object);
 
     [Fact]
     public async Task Execute_InvalidGoogleToken_ReturnsNull()
@@ -44,11 +52,14 @@ public class GoogleSignInUseCaseTests
 
         result.Should().NotBeNull();
         result!.AccessToken.Should().Be("test-jwt");
+        result.RefreshToken.Should().NotBeNullOrWhiteSpace();
         result.Email.Should().Be("user@example.com");
         result.Name.Should().Be("User Name");
         _tenantRepoMock.Verify(x => x.CreateAsync(It.Is<Tenant>(t => t.Name.Contains("User Name"))), Times.Once);
         _userRepoMock.Verify(x => x.CreateAsync(It.Is<User>(u =>
             u.GoogleId == "google-123" && u.Email == "user@example.com")), Times.Once);
+        _refreshTokenRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<RefreshToken>()), Times.Once);
+        _ownerPersonProvisionerMock.Verify(x => x.EnsureOwnerPersonAsync(It.IsAny<User>()), Times.Once);
     }
 
     [Fact]
@@ -79,5 +90,7 @@ public class GoogleSignInUseCaseTests
         result.TenantId.Should().Be(tenantId);
         _tenantRepoMock.Verify(x => x.CreateAsync(It.IsAny<Tenant>()), Times.Never);
         _userRepoMock.Verify(x => x.CreateAsync(It.IsAny<User>()), Times.Never);
+        _refreshTokenRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<RefreshToken>()), Times.Once);
+        _ownerPersonProvisionerMock.Verify(x => x.EnsureOwnerPersonAsync(existingUser), Times.Once);
     }
 }

@@ -82,8 +82,14 @@ builder.Services.AddScoped<IMonthlyClosingRepository, MonthlyClosingRepository>(
 builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddHttpClient<IGoogleTokenValidator, GoogleTokenValidator>();
+builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
+builder.Services.AddScoped<IOwnerPersonProvisioner, OwnerPersonProvisioner>();
 builder.Services.AddScoped<IJwtGenerator, JwtGenerator>();
+builder.Services.AddScoped<RegisterUseCase>();
+builder.Services.AddScoped<LoginUseCase>();
+builder.Services.AddScoped<RefreshTokenUseCase>();
 builder.Services.AddScoped<GoogleSignInUseCase>();
 builder.Services.AddScoped<GetAccountsUseCase>();
 builder.Services.AddScoped<GetAccountByIdUseCase>();
@@ -111,6 +117,7 @@ builder.Services.AddAuthentication("Bearer")
         {
             ValidateIssuer = false,
             ValidateAudience = false,
+            ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey =
                 new SymmetricSecurityKey(

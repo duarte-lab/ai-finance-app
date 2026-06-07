@@ -10,17 +10,23 @@ public class GoogleSignInUseCase
     private readonly IUserRepository _userRepository;
     private readonly ITenantRepository _tenantRepository;
     private readonly IJwtGenerator _jwtGenerator;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IOwnerPersonProvisioner _ownerPersonProvisioner;
 
     public GoogleSignInUseCase(
         IGoogleTokenValidator googleTokenValidator,
         IUserRepository userRepository,
         ITenantRepository tenantRepository,
-        IJwtGenerator jwtGenerator)
+        IJwtGenerator jwtGenerator,
+        IRefreshTokenRepository refreshTokenRepository,
+        IOwnerPersonProvisioner ownerPersonProvisioner)
     {
         _googleTokenValidator = googleTokenValidator;
         _userRepository = userRepository;
         _tenantRepository = tenantRepository;
         _jwtGenerator = jwtGenerator;
+        _refreshTokenRepository = refreshTokenRepository;
+        _ownerPersonProvisioner = ownerPersonProvisioner;
     }
 
     public async Task<AuthResponse?> ExecuteAsync(GoogleAuthRequest request)
@@ -30,6 +36,16 @@ public class GoogleSignInUseCase
             return null;
 
         var user = await _userRepository.GetByGoogleIdAsync(payload.GoogleId);
+
+        if (user is null)
+        {
+            user = await _userRepository.GetByEmailAsync(payload.Email);
+            if (user is not null && string.IsNullOrWhiteSpace(user.GoogleId))
+            {
+                user.GoogleId = payload.GoogleId;
+                await _userRepository.UpdateAsync(user);
+            }
+        }
 
         if (user is null)
         {
@@ -53,8 +69,20 @@ public class GoogleSignInUseCase
             await _userRepository.CreateAsync(user);
         }
 
-        var token = _jwtGenerator.Generate(user.Id, user.TenantId, user.Email, user.Name);
+        await _ownerPersonProvisioner.EnsureOwnerPersonAsync(user);
 
-        return new AuthResponse(token, user.Id, user.TenantId, user.Email, user.Name);
+        var token = _jwtGenerator.Generate(user.Id, user.TenantId, user.Email, user.Name);
+        var refreshTokenValue = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+        await _refreshTokenRepository.CreateAsync(new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            TenantId = user.TenantId,
+            Token = refreshTokenValue,
+            CreatedAtUtc = DateTime.UtcNow,
+            ExpiresAtUtc = DateTime.UtcNow.AddDays(30),
+        });
+
+        return new AuthResponse(token, refreshTokenValue, user.Id, user.TenantId, user.Email, user.Name);
     }
 }

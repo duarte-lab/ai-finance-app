@@ -35,12 +35,13 @@ public class CreatePersonUseCase
             Id = Guid.NewGuid(),
             TenantId = _currentUser.TenantId ?? Guid.Empty,
             Name = trimmedName,
+            Type = PersonType.Guest,
             CreatedAtUtc = DateTime.UtcNow,
             DeletedAtUtc = null,
         };
 
         await _repository.CreateAsync(person);
 
-        return new PersonResponse(person.Id, person.Name, person.CreatedAtUtc, person.DeletedAtUtc);
+        return new PersonResponse(person.Id, person.Name, person.Type, person.CreatedAtUtc, person.DeletedAtUtc);
     }
 }
