@@ -52,6 +52,7 @@ export interface Account {
 export interface Person {
   id: string;
   name: string;
+  type: "Owner" | "Guest";
   createdAtUtc: string;
   deletedAtUtc?: string | null;
 }

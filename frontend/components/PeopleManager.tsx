@@ -14,6 +14,10 @@ function formatDate(value: string): string {
   return Number.isNaN(date.getTime()) ? value : date.toISOString().slice(0, 10);
 }
 
+function personTypeLabel(type: Person["type"]): string {
+  return type === "Owner" ? "Owner" : "Guest";
+}
+
 export function PeopleManager({ initialPeople, token }: PeopleManagerProps) {
   const [people, setPeople] = useState<Person[]>(
     [...initialPeople].sort((a, b) => a.name.localeCompare(b.name)),
@@ -104,19 +108,26 @@ export function PeopleManager({ initialPeople, token }: PeopleManagerProps) {
               >
                 <div className="flex flex-col">
                   <span className="font-medium text-slate-900">{person.name}</span>
+                  <span className="text-xs text-slate-500">Tipo: {personTypeLabel(person.type)}</span>
                   <span className="text-xs text-slate-500">
                     Criada em {formatDate(person.createdAtUtc)}
                   </span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleDelete(person.id)}
-                  disabled={deletingId === person.id}
-                  className="rounded-md bg-rose-600 px-3 py-2 text-sm text-white disabled:opacity-60"
-                >
-                  {deletingId === person.id ? "Excluindo..." : "Excluir"}
-                </button>
+                {person.type === "Owner" ? (
+                  <span className="rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-600">
+                    Não removível
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(person.id)}
+                    disabled={deletingId === person.id}
+                    className="rounded-md bg-rose-600 px-3 py-2 text-sm text-white disabled:opacity-60"
+                  >
+                    {deletingId === person.id ? "Excluindo..." : "Excluir"}
+                  </button>
+                )}
               </li>
             ))}
           </ul>

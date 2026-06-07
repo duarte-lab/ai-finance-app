@@ -15,6 +15,7 @@ describe("PeopleManager", () => {
     {
       id: "person-1",
       name: "Ana",
+      type: "Guest",
       createdAtUtc: "2026-05-01T00:00:00Z",
       deletedAtUtc: null,
     },
@@ -28,6 +29,7 @@ describe("PeopleManager", () => {
     (api.createPerson as jest.Mock).mockResolvedValue({
       id: "person-2",
       name: "Bruno",
+      type: "Guest",
       createdAtUtc: "2026-05-02T00:00:00Z",
       deletedAtUtc: null,
     });
@@ -54,5 +56,25 @@ describe("PeopleManager", () => {
       expect(api.deletePerson).toHaveBeenCalledWith("person-1", token);
       expect(screen.queryByText("Ana")).not.toBeInTheDocument();
     });
+  });
+
+  it("does not allow deleting owner person", () => {
+    render(
+      <PeopleManager
+        initialPeople={[
+          {
+            id: "owner-1",
+            name: "Owner",
+            type: "Owner",
+            createdAtUtc: "2026-05-01T00:00:00Z",
+            deletedAtUtc: null,
+          },
+        ]}
+        token={token}
+      />,
+    );
+
+    expect(screen.getByText("Não removível")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Excluir" })).not.toBeInTheDocument();
   });
 });

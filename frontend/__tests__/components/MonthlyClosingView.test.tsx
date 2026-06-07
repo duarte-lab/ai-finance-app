@@ -38,11 +38,13 @@ describe("MonthlyClosingView", () => {
     {
       id: "person-1",
       name: "Ana",
+      type: "Owner",
       createdAtUtc: "2026-04-01T00:00:00Z",
     },
     {
       id: "person-2",
       name: "Bruno",
+      type: "Guest",
       createdAtUtc: "2026-04-01T00:00:00Z",
     },
   ];

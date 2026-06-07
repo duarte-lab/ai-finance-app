@@ -230,7 +230,7 @@ describe("services/api", () => {
   });
 
   it("getPeople should call people endpoint", async () => {
-    const payload = [{ id: "person-1", name: "Ana", createdAtUtc: "2026-05-05T00:00:00Z" }];
+    const payload = [{ id: "person-1", name: "Ana", type: "Guest", createdAtUtc: "2026-05-05T00:00:00Z" }];
 
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
@@ -247,7 +247,7 @@ describe("services/api", () => {
   });
 
   it("createPerson should call people post endpoint", async () => {
-    const payload = { id: "person-2", name: "Bruno", createdAtUtc: "2026-05-05T00:00:00Z" };
+    const payload = { id: "person-2", name: "Bruno", type: "Guest", createdAtUtc: "2026-05-05T00:00:00Z" };
 
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
