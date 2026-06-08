@@ -9,6 +9,7 @@ jest.mock("@/services/api", () => ({
   createAccount: jest.fn(),
   updateAccount: jest.fn(),
   updateAccountDivisionParticipation: jest.fn(),
+  deleteAccount: jest.fn(),
 }));
 
 describe("AccountsList", () => {
@@ -28,7 +29,12 @@ describe("AccountsList", () => {
 
   beforeEach(() => {
     (api.createAccount as jest.Mock).mockReset();
+    (api.deleteAccount as jest.Mock).mockReset();
   });
+
+  function openMenu(accountName: string) {
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(`acoes da conta ${accountName}`, "i") }));
+  }
 
   it("shows accounts and marks an account as paid", async () => {
     (api.markAccountAsPaid as jest.Mock).mockResolvedValue({
@@ -41,6 +47,7 @@ describe("AccountsList", () => {
     expect(screen.getByText("Rent")).toBeInTheDocument();
     expect(screen.getByText("Pendente")).toBeInTheDocument();
 
+    openMenu("Rent");
     fireEvent.click(screen.getByRole("button", { name: "Pagar" }));
 
     await waitFor(() => {
@@ -90,7 +97,21 @@ describe("AccountsList", () => {
     });
   });
 
-  it("marks account as participant in division", async () => {
+  it("shows placeholders in form fields", () => {
+    render(<AccountsList initialAccounts={[]} initialYear={2026} initialMonth={5} token={token} />);
+
+    expect(screen.getByPlaceholderText("Nome")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Valor")).toBeInTheDocument();
+  });
+
+  it("fills date field with today's UTC date by default", () => {
+    render(<AccountsList initialAccounts={[]} initialYear={2026} initialMonth={5} token={token} />);
+
+    const today = new Date().toISOString().slice(0, 10);
+    expect(screen.getByLabelText("Data de vencimento")).toHaveValue(today);
+  });
+
+  it("marks account as participant in division via menu", async () => {
     (api.updateAccountDivisionParticipation as jest.Mock).mockResolvedValue({
       ...initialAccounts[0],
       participatesInDivision: true,
@@ -98,6 +119,7 @@ describe("AccountsList", () => {
 
     render(<AccountsList initialAccounts={initialAccounts} initialYear={2026} initialMonth={5} token={token} />);
 
+    openMenu("Rent");
     fireEvent.click(screen.getByRole("button", { name: "Marcar na divisao" }));
 
     await waitFor(() => {
@@ -106,7 +128,7 @@ describe("AccountsList", () => {
     });
   });
 
-  it("edits an account", async () => {
+  it("edits an account via menu", async () => {
     (api.updateAccount as jest.Mock).mockResolvedValue({
       ...initialAccounts[0],
       name: "Rent updated",
@@ -114,6 +136,7 @@ describe("AccountsList", () => {
 
     render(<AccountsList initialAccounts={initialAccounts} initialYear={2026} initialMonth={5} token={token} />);
 
+    openMenu("Rent");
     fireEvent.click(screen.getByRole("button", { name: "Editar" }));
     fireEvent.change(screen.getByLabelText("Editar nome da conta"), {
       target: { value: "Rent updated" },
@@ -131,4 +154,17 @@ describe("AccountsList", () => {
     });
   });
 
+  it("deletes an account via menu", async () => {
+    (api.deleteAccount as jest.Mock).mockResolvedValue(undefined);
+
+    render(<AccountsList initialAccounts={initialAccounts} initialYear={2026} initialMonth={5} token={token} />);
+
+    openMenu("Rent");
+    fireEvent.click(screen.getByRole("button", { name: "Excluir" }));
+
+    await waitFor(() => {
+      expect(api.deleteAccount).toHaveBeenCalledWith("account-1", token);
+      expect(screen.queryByText("Rent")).not.toBeInTheDocument();
+    });
+  });
 });

@@ -78,6 +78,12 @@ export interface DashboardCategoryPoint {
   count: number;
 }
 
+export interface DashboardMonthlyTotal {
+  year: number;
+  month: number;
+  totalAmount: number;
+}
+
 export interface DashboardSummary {
   year: number;
   month: number;
@@ -88,6 +94,8 @@ export interface DashboardSummary {
   paidCount: number;
   pendingCount: number;
   chart: DashboardCategoryPoint[];
+  paidSeries: DashboardCategoryPoint[];
+  lastSixMonths: DashboardMonthlyTotal[];
 }
 
 export interface CreateMonthlyClosingRequest {
@@ -199,6 +207,15 @@ export async function updateAccountDivisionParticipation(
   ensureApiSuccess(res, "Failed to update account division participation");
 
   return (await res.json()) as Account;
+}
+
+export async function deleteAccount(id: string, token?: string): Promise<void> {
+  const res = await fetch(`${getApiBaseUrl()}/api/accounts/${id}`, {
+    method: "DELETE",
+    headers: buildHeaders(token),
+  });
+
+  ensureApiSuccess(res, "Failed to delete account");
 }
 
 export async function getPeople(token?: string): Promise<Person[]> {

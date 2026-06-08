@@ -1,9 +1,34 @@
 "use client";
 
 import { useState } from "react";
+import {
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+} from "chart.js";
+import { Bar, Line, Pie } from "react-chartjs-2";
 import { DashboardSummary, DueNotification, getDashboardSummary } from "@/services/api";
 import { handleApiError } from "@/lib/client-auth";
 import { MonthNavigation } from "@/components/MonthNavigation";
+
+ChartJS.register(
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+);
 
 interface DashboardSummaryViewProps {
   initialSummary: DashboardSummary;
@@ -18,14 +43,6 @@ function currency(value: number): string {
     style: "currency",
     currency: "BRL",
   }).format(value);
-}
-
-function getBarPercentage(value: number, total: number): number {
-  if (total <= 0) {
-    return 0;
-  }
-
-  return Math.round((value / total) * 100);
 }
 
 export function DashboardSummaryView({
@@ -57,8 +74,45 @@ export function DashboardSummaryView({
     }
   }
 
-  const paidPercentage = getBarPercentage(summary.paidAmount, summary.totalAmount);
-  const pendingPercentage = getBarPercentage(summary.pendingAmount, summary.totalAmount);
+  const pieData = {
+    labels: summary.chart.map((p) => p.label),
+    datasets: [
+      {
+        data: summary.chart.map((p) => p.amount),
+        backgroundColor: ["#22c55e", "#f59e0b"],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const lineData = {
+    labels: summary.paidSeries.map((p) => p.label),
+    datasets: [
+      {
+        label: "Pago (R$)",
+        data: summary.paidSeries.map((p) => p.amount),
+        borderColor: "#22c55e",
+        backgroundColor: "rgba(34,197,94,0.15)",
+        tension: 0.3,
+        fill: true,
+      },
+    ],
+  };
+
+  const barData = {
+    labels: summary.lastSixMonths.map(
+      (p) => `${String(p.month).padStart(2, "0")}/${p.year}`,
+    ),
+    datasets: [
+      {
+        label: "Total (R$)",
+        data: summary.lastSixMonths.map((p) => p.totalAmount),
+        backgroundColor: "#6366f1",
+      },
+    ],
+  };
+
+  const chartOptions = { responsive: true, maintainAspectRatio: true };
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
@@ -99,7 +153,7 @@ export function DashboardSummaryView({
       )}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
-        <h1 className="text-2xl font-semibold text-slate-900">Dashboard financeiro</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">Painel de Controle</h1>
         <p className="mt-1 text-sm text-slate-600">
           Resumo de {String(summary.month).padStart(2, "0")}/{summary.year}
         </p>
@@ -125,40 +179,36 @@ export function DashboardSummaryView({
         </article>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Grafico simples</h2>
-        <p className="mt-1 text-sm text-slate-600">Distribuicao entre pago e pendente no mes.</p>
+      <section
+        aria-label="graficos-mensais"
+        className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-6 md:grid-cols-2"
+      >
+        <div>
+          <h2 className="mb-4 text-base font-semibold text-slate-900">Pago vs Pendente</h2>
+          <Pie data={pieData} options={chartOptions} aria-label="grafico-pizza" />
+        </div>
 
-        <div className="mt-5 flex flex-col gap-4">
-          <div>
-            <div className="mb-1 flex justify-between text-sm">
-              <span className="font-medium text-green-700">Pago</span>
-              <span className="text-slate-700">{paidPercentage}%</span>
-            </div>
-            <div className="h-3 rounded-full bg-slate-100">
-              <div
-                className="h-3 rounded-full bg-green-500"
-                style={{ width: `${paidPercentage}%` }}
-                aria-label="barra-pago"
-              />
-            </div>
-          </div>
-
-          <div>
-            <div className="mb-1 flex justify-between text-sm">
-              <span className="font-medium text-amber-700">Pendente</span>
-              <span className="text-slate-700">{pendingPercentage}%</span>
-            </div>
-            <div className="h-3 rounded-full bg-slate-100">
-              <div
-                className="h-3 rounded-full bg-amber-500"
-                style={{ width: `${pendingPercentage}%` }}
-                aria-label="barra-pendente"
-              />
-            </div>
-          </div>
+        <div>
+          <h2 className="mb-4 text-base font-semibold text-slate-900">Contas pagas no mes</h2>
+          <Line data={lineData} options={chartOptions} aria-label="grafico-linha" />
         </div>
       </section>
+
+      <section
+        aria-label="grafico-ultimos-6-meses"
+        className="rounded-2xl border border-slate-200 bg-white p-6"
+      >
+        <h2 className="mb-4 text-base font-semibold text-slate-900">Totais dos ultimos 6 meses</h2>
+        <Bar
+          data={barData}
+          options={{ ...chartOptions, plugins: { legend: { display: false } } }}
+          aria-label="grafico-barras"
+        />
+      </section>
+
+      {isLoading && (
+        <p className="text-center text-sm text-slate-500">Carregando...</p>
+      )}
     </main>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Account,
   createAccount,
+  deleteAccount,
   getAccounts,
   markAccountAsPaid,
   updateAccount,
@@ -19,6 +20,10 @@ interface AccountsListProps {
   token?: string;
 }
 
+function todayUtc(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function AccountsList({
   initialAccounts,
   initialYear,
@@ -31,14 +36,27 @@ export function AccountsList({
   const [isLoading, setIsLoading] = useState(false);
   const [payingId, setPayingId] = useState<string | null>(null);
   const [divisionUpdatingId, setDivisionUpdatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
-  const [dueDate, setDueDate] = useState("");
+  const [dueDate, setDueDate] = useState(todayUtc);
   const [editName, setEditName] = useState("");
   const [editAmount, setEditAmount] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   async function applyFilter(nextYear = year, nextMonth = month) {
     setIsLoading(true);
@@ -85,7 +103,7 @@ export function AccountsList({
       setAccounts((prev) => [created, ...prev]);
       setName("");
       setAmount("");
-      setDueDate("");
+      setDueDate(todayUtc());
     } catch (err) {
       const message = handleApiError(err, "Failed to create account.");
       if (message) setError(message);
@@ -121,6 +139,7 @@ export function AccountsList({
 
   async function toggleDivisionParticipation(account: Account) {
     setDivisionUpdatingId(account.id);
+    setOpenMenuId(null);
     setError(null);
 
     try {
@@ -135,6 +154,22 @@ export function AccountsList({
       if (message) setError(message);
     } finally {
       setDivisionUpdatingId(null);
+    }
+  }
+
+  async function removeAccount(id: string) {
+    setDeletingId(id);
+    setOpenMenuId(null);
+    setError(null);
+
+    try {
+      await deleteAccount(id, token);
+      setAccounts((prev) => prev.filter((item) => item.id !== id));
+    } catch (err) {
+      const message = handleApiError(err, "Failed to delete account.");
+      if (message) setError(message);
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -195,7 +230,7 @@ export function AccountsList({
 
       {error && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      <section id="lista-contas" className="flex flex-col gap-3 scroll-mt-24">
+      <section id="lista-contas" className="flex flex-col gap-3 scroll-mt-24" ref={menuRef}>
         {accounts.length === 0 ? (
           <p className="rounded-xl border border-dashed border-slate-300 p-6 text-slate-600">
             Nenhuma conta encontrada para o filtro selecionado.
@@ -204,9 +239,9 @@ export function AccountsList({
           accounts.map((account) => (
             <article
               key={account.id}
-              className="flex items-center justify-between rounded-xl border border-slate-200 p-4"
+              className="flex items-start justify-between rounded-xl border border-slate-200 p-4"
             >
-              <div className="flex flex-col">
+              <div className="flex flex-col gap-1">
                 <span className="text-lg font-medium text-slate-900">{account.name}</span>
                 <span className="text-sm text-slate-600">
                   Vencimento: {new Date(account.dueDate).toISOString().slice(0, 10)}
@@ -217,6 +252,13 @@ export function AccountsList({
                 </span>
                 <span className="text-sm text-slate-600">
                   Divisao mensal: {account.participatesInDivision ? "Participa" : "Nao participa"}
+                </span>
+                <span
+                  className={`mt-1 w-fit rounded-full px-3 py-1 text-sm ${
+                    account.paid ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                  }`}
+                >
+                  {account.paid ? "Pago" : "Pendente"}
                 </span>
 
                 {editingAccountId === account.id && (
@@ -243,50 +285,65 @@ export function AccountsList({
                       onChange={(e) => setEditDueDate(e.target.value)}
                       className="rounded-md border border-slate-300 px-2 py-1 text-sm"
                     />
+                    <button
+                      type="button"
+                      onClick={() => saveEdit(account)}
+                      className="col-span-full rounded-md bg-slate-700 px-4 py-2 text-sm text-white"
+                    >
+                      Salvar
+                    </button>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
-                <span
-                  className={`rounded-full px-3 py-1 text-sm ${
-                    account.paid
-                      ? "bg-green-100 text-green-700"
-                      : "bg-amber-100 text-amber-700"
-                  }`}
-                >
-                  {account.paid ? "Pago" : "Pendente"}
-                </span>
-
+              <div className="relative">
                 <button
                   type="button"
-                  onClick={() => payAccount(account.id)}
-                  disabled={account.paid || payingId === account.id}
-                  className="rounded-md bg-emerald-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  aria-label={`Acoes da conta ${account.name}`}
+                  onClick={() => setOpenMenuId((prev) => (prev === account.id ? null : account.id))}
+                  className="rounded-md border border-slate-200 px-3 py-2 text-slate-600 hover:bg-slate-50"
                 >
-                  {payingId === account.id ? "Processando..." : "Pagar"}
+                  ...
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => toggleDivisionParticipation(account)}
-                  disabled={divisionUpdatingId === account.id}
-                  className="rounded-md bg-indigo-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {divisionUpdatingId === account.id
-                    ? "Atualizando..."
-                    : account.participatesInDivision
-                      ? "Remover da divisao"
-                      : "Marcar na divisao"}
-                </button>
+                {openMenuId === account.id && (
+                  <div className="absolute right-0 z-10 mt-1 w-52 rounded-md border border-slate-200 bg-white shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => { void payAccount(account.id); setOpenMenuId(null); }}
+                      disabled={account.paid || payingId === account.id}
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {payingId === account.id ? "Processando..." : "Pagar"}
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={() => (editingAccountId === account.id ? saveEdit(account) : startEditing(account))}
-                  className="rounded-md bg-slate-700 px-4 py-2 text-white"
-                >
-                  {editingAccountId === account.id ? "Salvar" : "Editar"}
-                </button>
+                    <button
+                      type="button"
+                      onClick={() => { startEditing(account); setOpenMenuId(null); }}
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => toggleDivisionParticipation(account)}
+                      disabled={divisionUpdatingId === account.id}
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {account.participatesInDivision ? "Remover da divisao" : "Marcar na divisao"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => void removeAccount(account.id)}
+                      disabled={deletingId === account.id}
+                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {deletingId === account.id ? "Excluindo..." : "Excluir"}
+                    </button>
+                  </div>
+                )}
               </div>
             </article>
           ))
