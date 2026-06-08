@@ -35,12 +35,11 @@ describe("DashboardSummaryView", () => {
     );
 
     expect(screen.getByText(/dashboard financeiro/i)).toBeInTheDocument();
-    expect(screen.getByText(/05\s*\/\s*2026/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/mês e ano selecionados/i)).toHaveTextContent("05/2026");
     expect(screen.getByText(/75\s*%/)).toBeInTheDocument();
     expect(screen.getByText(/25\s*%/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/ano do dashboard/i)).toHaveValue(2026);
-    expect(screen.getByLabelText(/mes do dashboard/i)).toHaveValue(5);
-    expect(screen.getByRole("button", { name: /filtrar/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /mês anterior/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /mês próximo/i })).toBeInTheDocument();
     expect(screen.getByLabelText("barra-pago")).toBeInTheDocument();
     expect(screen.getByLabelText("barra-pendente")).toBeInTheDocument();
     expect(screen.getByText(/alertas de vencimento/i)).toBeInTheDocument();

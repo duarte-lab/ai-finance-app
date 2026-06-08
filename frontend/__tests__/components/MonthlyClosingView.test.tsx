@@ -164,10 +164,7 @@ describe("MonthlyClosingView", () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText(/mes do fechamento/i), {
-      target: { value: "6" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: /buscar contas/i }));
+    fireEvent.click(screen.getByRole("button", { name: /mês próximo/i }));
 
     await waitFor(() => {
       expect(api.getAccounts).toHaveBeenLastCalledWith({ year: 2026, month: 6 }, token);

@@ -10,6 +10,7 @@ import {
   updateAccountDivisionParticipation,
 } from "@/services/api";
 import { handleApiError } from "@/lib/client-auth";
+import { MonthNavigation } from "@/components/MonthNavigation";
 
 interface AccountsListProps {
   initialAccounts: Account[];
@@ -39,12 +40,12 @@ export function AccountsList({
   const [editAmount, setEditAmount] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
 
-  async function applyFilter() {
+  async function applyFilter(nextYear = year, nextMonth = month) {
     setIsLoading(true);
     setError(null);
 
     try {
-      const filtered = await getAccounts({ year, month }, token);
+      const filtered = await getAccounts({ year: nextYear, month: nextMonth }, token);
       setAccounts(filtered);
     } catch (err) {
       const message = handleApiError(err, "Failed to filter accounts.");
@@ -139,6 +140,19 @@ export function AccountsList({
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
+      <section className="w-full rounded-xl border border-slate-200 bg-white p-4">
+        <MonthNavigation
+          year={year}
+          month={month}
+          onChange={(nextYear, nextMonth) => {
+            setYear(nextYear);
+            setMonth(nextMonth);
+            void applyFilter(nextYear, nextMonth);
+          }}
+          ariaLabel="Navegacao mensal de contas"
+        />
+      </section>
+
       <header className="flex flex-col gap-3 rounded-xl border border-slate-200 p-4">
         <h1 className="text-2xl font-semibold text-slate-900">Contas</h1>
 
@@ -177,37 +191,6 @@ export function AccountsList({
             Criar conta
           </button>
         </form>
-        <div id="filtro-mensal" className="flex flex-wrap items-end gap-3 scroll-mt-24">
-          <label className="flex flex-col gap-1 text-sm text-slate-700">
-            Ano
-            <input
-              type="number"
-              min={1}
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-              className="rounded-md border border-slate-300 px-3 py-2"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-slate-700">
-            Mês
-            <input
-              type="number"
-              min={1}
-              max={12}
-              value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
-              className="rounded-md border border-slate-300 px-3 py-2"
-            />
-          </label>
-          <button
-            type="button"
-            onClick={applyFilter}
-            disabled={isLoading}
-            className="rounded-md bg-slate-900 px-4 py-2 text-white disabled:opacity-60"
-          >
-            {isLoading ? "Filtrando..." : "Filtrar"}
-          </button>
-        </div>
       </header>
 
       {error && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}

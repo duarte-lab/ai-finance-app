@@ -54,8 +54,7 @@ describe("AccountsList", () => {
 
     render(<AccountsList initialAccounts={initialAccounts} initialYear={2026} initialMonth={5} token={token} />);
 
-    fireEvent.change(screen.getByLabelText("Mês"), { target: { value: "6" } });
-    fireEvent.click(screen.getByRole("button", { name: "Filtrar" }));
+    fireEvent.click(screen.getByRole("button", { name: /mês próximo/i }));
 
     await waitFor(() => {
       expect(api.getAccounts).toHaveBeenCalledWith({ year: 2026, month: 6 }, token);

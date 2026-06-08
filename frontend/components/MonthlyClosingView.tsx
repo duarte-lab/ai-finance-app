@@ -11,6 +11,7 @@ import {
   reopenMonthlyClosing,
 } from "@/services/api";
 import { handleApiError } from "@/lib/client-auth";
+import { MonthNavigation } from "@/components/MonthNavigation";
 
 interface MonthlyClosingViewProps {
   initialAccounts: Account[];
@@ -67,15 +68,15 @@ export function MonthlyClosingView({
     [accounts, selectedAccountIds],
   );
 
-  async function applyMonthFilter() {
+  async function applyMonthFilter(nextYear = year, nextMonth = month) {
     setIsFiltering(true);
     setError(null);
     setSuccessMessage(null);
 
     try {
       const [monthAccounts, monthClosing] = await Promise.all([
-        getAccounts({ year, month }, token),
-        getMonthlyClosing(year, month, token),
+        getAccounts({ year: nextYear, month: nextMonth }, token),
+        getMonthlyClosing(nextYear, nextMonth, token),
       ]);
 
       setAccounts(monthAccounts);
@@ -169,47 +170,24 @@ export function MonthlyClosingView({
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
+      <section className="w-full rounded-2xl border border-slate-200 bg-white p-4">
+        <MonthNavigation
+          year={year}
+          month={month}
+          onChange={(nextYear, nextMonth) => {
+            setYear(nextYear);
+            setMonth(nextMonth);
+            void applyMonthFilter(nextYear, nextMonth);
+          }}
+          ariaLabel="Navegacao mensal do fechamento"
+        />
+      </section>
+
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h1 className="text-2xl font-semibold text-slate-900">Fechamento mensal</h1>
         <p className="mt-1 text-sm text-slate-600">
           Selecione as contas do mes, carregue participantes da lista de pessoas e divida o total igualmente.
         </p>
-
-        <div className="mt-4 flex flex-wrap items-end gap-3">
-          <label className="flex flex-col gap-1 text-sm text-slate-700">
-            Ano
-            <input
-              aria-label="Ano do fechamento"
-              type="number"
-              min={1}
-              value={year}
-              onChange={(event) => setYear(Number(event.target.value))}
-              className="rounded-md border border-slate-300 px-3 py-2"
-            />
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm text-slate-700">
-            Mes
-            <input
-              aria-label="Mes do fechamento"
-              type="number"
-              min={1}
-              max={12}
-              value={month}
-              onChange={(event) => setMonth(Number(event.target.value))}
-              className="rounded-md border border-slate-300 px-3 py-2"
-            />
-          </label>
-
-          <button
-            type="button"
-            onClick={applyMonthFilter}
-            disabled={isFiltering}
-            className="rounded-md bg-slate-900 px-4 py-2 text-white disabled:opacity-60"
-          >
-            {isFiltering ? "Carregando..." : "Buscar contas"}
-          </button>
-        </div>
       </section>
 
       {error && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
