@@ -2,6 +2,7 @@ using Application.Accounts.DTOs;
 using Application.Accounts.Interfaces;
 using Application.Accounts.UseCases;
 using Application.Auth.Interfaces;
+using Application.MonthlyClosing.Interfaces;
 using Domain.Entities;
 using FluentAssertions;
 using Moq;
@@ -123,5 +124,69 @@ public class AccountsUseCasesTests
         repositoryMock.Verify(
             x => x.UpdateAsync(It.Is<Account>(a => a.Id == id && a.ParticipatesInDivision)),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAccount_WhenMonthIsOpen_ShouldDelete()
+    {
+        var id = Guid.NewGuid();
+        var account = new Account
+        {
+            Id = id,
+            Name = "Rent",
+            Amount = 1200m,
+            DueDate = new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc),
+        };
+
+        var repositoryMock = new Mock<IAccountRepository>();
+        repositoryMock.Setup(x => x.GetByIdAsync(id)).ReturnsAsync(account);
+        repositoryMock.Setup(x => x.DeleteAsync(id)).ReturnsAsync(true);
+
+        var closingMock = new Mock<IMonthlyClosingRepository>();
+        closingMock.Setup(x => x.GetActiveByYearMonthAsync(2026, 5)).ReturnsAsync((Domain.Entities.MonthlyClosing?)null);
+
+        var useCase = new DeleteAccountUseCase(repositoryMock.Object, closingMock.Object);
+
+        var result = await useCase.ExecuteAsync(id);
+
+        result.Should().BeTrue();
+        repositoryMock.Verify(x => x.DeleteAsync(id), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAccount_WhenMonthIsClosed_ShouldThrowInvalidOperationException()
+    {
+        var id = Guid.NewGuid();
+        var account = new Account
+        {
+            Id = id,
+            Name = "Rent",
+            Amount = 1200m,
+            DueDate = new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc),
+        };
+
+        var activeClosing = new Domain.Entities.MonthlyClosing
+        {
+            Id = Guid.NewGuid(),
+            Year = 2026,
+            Month = 5,
+            ClosedAtUtc = DateTime.UtcNow,
+            AccountIds = [],
+            Participants = [],
+        };
+
+        var repositoryMock = new Mock<IAccountRepository>();
+        repositoryMock.Setup(x => x.GetByIdAsync(id)).ReturnsAsync(account);
+
+        var closingMock = new Mock<IMonthlyClosingRepository>();
+        closingMock.Setup(x => x.GetActiveByYearMonthAsync(2026, 5)).ReturnsAsync(activeClosing);
+
+        var useCase = new DeleteAccountUseCase(repositoryMock.Object, closingMock.Object);
+
+        var action = async () => await useCase.ExecuteAsync(id);
+
+        await action.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*closed month*");
+        repositoryMock.Verify(x => x.DeleteAsync(It.IsAny<Guid>()), Times.Never);
     }
 }

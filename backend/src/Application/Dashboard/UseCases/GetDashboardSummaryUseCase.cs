@@ -22,6 +22,24 @@ public class GetDashboardSummaryUseCase
         var paidAmount = paidAccounts.Sum(x => x.Amount);
         var pendingAmount = pendingAccounts.Sum(x => x.Amount);
 
+        var paidSeries = paidAccounts
+            .GroupBy(a => a.DueDate.ToString("yyyy-MM-dd"))
+            .Select(g => new DashboardCategoryPointResponse(g.Key, g.Sum(a => a.Amount), g.Count()))
+            .OrderBy(p => p.Label)
+            .ToList();
+
+        var lastSixMonths = new List<DashboardMonthlyTotalResponse>();
+        for (var i = 5; i >= 0; i--)
+        {
+            var target = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-i);
+            var monthAccounts = (target.Year == year && target.Month == month)
+                ? accounts
+                : await _accountRepository.GetAllAsync(target.Year, target.Month);
+
+            lastSixMonths.Add(new DashboardMonthlyTotalResponse(
+                target.Year, target.Month, monthAccounts.Sum(a => a.Amount)));
+        }
+
         return new DashboardSummaryResponse(
             Year: year,
             Month: month,
@@ -35,6 +53,8 @@ public class GetDashboardSummaryUseCase
             [
                 new DashboardCategoryPointResponse("Paid", paidAmount, paidAccounts.Count),
                 new DashboardCategoryPointResponse("Pending", pendingAmount, pendingAccounts.Count)
-            ]);
+            ],
+            PaidSeries: paidSeries,
+            LastSixMonths: lastSixMonths);
     }
 }

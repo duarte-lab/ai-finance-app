@@ -9,4 +9,6 @@ public record DashboardSummaryResponse(
     int TotalCount,
     int PaidCount,
     int PendingCount,
-    IReadOnlyCollection<DashboardCategoryPointResponse> Chart);
+    IReadOnlyCollection<DashboardCategoryPointResponse> Chart,
+    IReadOnlyCollection<DashboardCategoryPointResponse> PaidSeries,
+    IReadOnlyCollection<DashboardMonthlyTotalResponse> LastSixMonths);
