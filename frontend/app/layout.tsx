@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { AppFrame } from "@/components/AppFrame";
 import { AuthSessionProvider } from "@/components/AuthSessionProvider";
-import { MainNavigation } from "@/components/MainNavigation";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,8 +35,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
         <AuthSessionProvider session={session}>
-          <MainNavigation />
-          {children}
+          <AppFrame>{children}</AppFrame>
         </AuthSessionProvider>
       </body>
     </html>

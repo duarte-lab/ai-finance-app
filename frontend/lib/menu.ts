@@ -5,57 +5,62 @@ export type MenuItem = {
   badge?: string;
 };
 
-export const headerMenuItems: MenuItem[] = [
+export type MenuSection = {
+  title: string;
+  description: string;
+  href?: string;
+  items: MenuItem[];
+};
+
+export const drawerMenuSections: MenuSection[] = [
   {
-    title: "Inicio",
-    description: "Tela inicial do sistema",
+    title: "Visao geral",
+    description: "Acesso rapido ao inicio e acompanhamento mensal",
     href: "/",
+    items: [
+      {
+        title: "Dashboard",
+        description: "Visao geral financeira do mes",
+        href: "/dashboard",
+      },
+    ],
   },
   {
-    title: "Dashboard",
-    description: "Visao geral financeira do mes",
-    href: "/dashboard",
-  },
-  {
-    title: "Contas",
-    description: "Gestao de contas domesticas",
-    href: "/accounts",
-  },
-  {
-    title: "Fechamento",
-    description: "Fechamento mensal e divisao de despesas",
-    href: "/closing",
-  },
-  {
-    title: "Pessoas",
-    description: "Gestao de pessoas da casa",
-    href: "/people",
+    title: "Gestao financeira",
+    description: "Operacoes do dia a dia da casa",
+    items: [
+      {
+        title: "Contas",
+        description: "Gestao de contas domesticas",
+        href: "/accounts",
+      },
+      {
+        title: "Fechamento",
+        description: "Fechamento mensal e divisao de despesas",
+        href: "/closing",
+      },
+      {
+        title: "Pessoas",
+        description: "Gestao de pessoas da casa",
+        href: "/people",
+      },
+    ],
   },
 ];
 
 export const homeFeatureMenuItems: MenuItem[] = [
-  {
-    title: "Dashboard",
-    description: "Acompanhe total do mes, pagos e pendentes",
-    href: "/dashboard",
-    badge: "Ativo",
-  },
-  {
-    title: "Contas",
-    description: "Lista e gerencia contas do mes atual",
-    href: "/accounts",
-    badge: "Ativo",
-  },
-  {
-    title: "Fechamento",
-    description: "Fechamento mensal e divisao de despesas",
-    href: "/closing",
-    badge: "Ativo",
-  },
-  {
-    title: "Pessoas",
-    description: "Visualize e organize as pessoas participantes",
-    href: "/people",
-    badge: "Ativo",
-  },
+  ...drawerMenuSections.flatMap((section) =>
+    section.items.map((item) => ({
+      ...item,
+      description:
+        item.href === "/dashboard"
+          ? "Acompanhe total do mes, pagos e pendentes"
+          : item.href === "/accounts"
+            ? "Lista e gerencia contas do mes atual"
+            : item.href === "/people"
+              ? "Visualize e organize as pessoas participantes"
+              : item.description,
+      badge: "Ativo",
+    })),
+  ),
 ];

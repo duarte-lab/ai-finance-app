@@ -7,37 +7,17 @@ jest.mock("next-auth/react", () => ({
 }));
 
 describe("MainNavigation", () => {
-  it("renders header menu links", () => {
-    render(<MainNavigation />);
+  it("renders app brand and drawer trigger", () => {
+    const onToggleDrawer = jest.fn();
+
+    render(<MainNavigation onToggleDrawer={onToggleDrawer} />);
 
     expect(screen.getByRole("link", { name: /ai finance app/i })).toHaveAttribute(
       "href",
       "/",
     );
 
-    expect(screen.getByRole("link", { name: /inicio/i })).toHaveAttribute(
-      "href",
-      "/",
-    );
-
-    expect(screen.getByRole("link", { name: /contas/i })).toHaveAttribute(
-      "href",
-      "/accounts",
-    );
-
-    expect(screen.getByRole("link", { name: /dashboard/i })).toHaveAttribute(
-      "href",
-      "/dashboard",
-    );
-
-    expect(screen.getByRole("link", { name: /fechamento/i })).toHaveAttribute(
-      "href",
-      "/closing",
-    );
-
-    expect(screen.getByRole("link", { name: /pessoas/i })).toHaveAttribute(
-      "href",
-      "/people",
-    );
+    screen.getByRole("button", { name: /abrir menu lateral/i }).click();
+    expect(onToggleDrawer).toHaveBeenCalledTimes(1);
   });
 });
