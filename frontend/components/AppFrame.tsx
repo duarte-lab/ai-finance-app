@@ -29,6 +29,8 @@ export function AppFrame({ children }: AppFrameProps) {
   const handleDrawerClose = () => {
     if (!isPinned) {
       clearCloseTimeout();
+      setIsHoveringIcons(false);
+      setIsHoveringDrawer(false);
       setIsDrawerOpen(false);
     }
   };
