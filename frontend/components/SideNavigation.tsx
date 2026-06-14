@@ -98,7 +98,7 @@ export function SideNavigation({ isOpen, onClose }: SideNavigationProps) {
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <nav className="h-full overflow-y-auto px-4 pb-6">
+        <nav className="h-full overflow-y-auto px-6 pb-6">
           <ul className="space-y-5">
             {drawerMenuSections.map((section) => {
               const sectionActive =
@@ -131,7 +131,7 @@ export function SideNavigation({ isOpen, onClose }: SideNavigationProps) {
                     <p className="px-3 pt-1 text-xs text-slate-500">{section.description}</p>
                   </div>
 
-                  <ul className="space-y-1">
+                  <ul className="space-y-1 ml-4">
                     {section.items.map((item) => {
                       const activeItem = isActivePath(pathname, item.href);
 
@@ -140,7 +140,7 @@ export function SideNavigation({ isOpen, onClose }: SideNavigationProps) {
                           <Link
                             href={item.href}
                             onClick={onClose}
-                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
+                            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
                               activeItem
                                 ? "bg-slate-100 font-medium text-slate-900"
                                 : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
