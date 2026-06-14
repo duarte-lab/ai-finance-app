@@ -84,6 +84,34 @@ Aplicacao para controle de contas domesticas, pessoas participantes e fechamento
 docker compose up --build
 ```
 
+### Com Docker em desenvolvimento (hot reload, sem rebuild continuo)
+
+Use o compose de desenvolvimento para backend e frontend com recarga automatica.
+
+Primeira subida (gera imagens de dev):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+Subidas seguintes (sem rebuild):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --no-build
+```
+
+Quando precisar reconstruir:
+
+- alteracao em package.json
+- alteracao em .csproj
+- alteracao em Dockerfiles
+
+Para limpar volumes de cache (node_modules/.next/nuget) e forcar ambiente limpo:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+```
+
 ### Backend
 
 ```bash

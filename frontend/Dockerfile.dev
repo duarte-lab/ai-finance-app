@@ -1,0 +1,6 @@
+FROM node:20
+WORKDIR /app
+
+EXPOSE 3000
+
+CMD ["sh", "-c", "if [ ! -d node_modules ] || [ -z \"$(ls -A node_modules 2>/dev/null)\" ]; then npm ci; fi && npm run dev -- -H 0.0.0.0 -p 3000"]
