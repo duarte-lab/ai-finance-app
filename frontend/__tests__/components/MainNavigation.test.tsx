@@ -17,7 +17,7 @@ describe("MainNavigation", () => {
       "/",
     );
 
-    screen.getByRole("button", { name: /abrir menu lateral/i }).click();
+    screen.getByRole("button", { name: /exibir menu/i }).click();
     expect(onToggleDrawer).toHaveBeenCalledTimes(1);
   });
 });
