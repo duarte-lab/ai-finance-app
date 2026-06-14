@@ -7,17 +7,12 @@ jest.mock("next-auth/react", () => ({
 }));
 
 describe("MainNavigation", () => {
-  it("renders app brand and drawer trigger", () => {
-    const onToggleDrawer = jest.fn();
-
-    render(<MainNavigation onToggleDrawer={onToggleDrawer} />);
+  it("renders app brand and session actions", () => {
+    render(<MainNavigation />);
 
     expect(screen.getByRole("link", { name: /ai finance app/i })).toHaveAttribute(
       "href",
       "/",
     );
-
-    screen.getByRole("button", { name: /exibir menu/i }).click();
-    expect(onToggleDrawer).toHaveBeenCalledTimes(1);
   });
 });

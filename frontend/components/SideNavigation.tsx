@@ -7,6 +7,8 @@ import { drawerMenuSections } from "@/lib/menu";
 type SideNavigationProps = {
   isOpen: boolean;
   onClose: () => void;
+  onHoverStart?: () => void;
+  onHoverEnd?: () => void;
 };
 
 function isActivePath(currentPath: string, href?: string) {
@@ -78,87 +80,78 @@ function ItemIcon({ icon }: { icon?: "chart" | "wallet" | "calendar" | "users" }
   }
 }
 
-export function SideNavigation({ isOpen, onClose }: SideNavigationProps) {
+export function SideNavigation({ isOpen, onClose, onHoverStart, onHoverEnd }: SideNavigationProps) {
   const pathname = usePathname();
 
   return (
-    <>
-      <button
-        aria-label="Fechar menu"
-        onClick={onClose}
-        className={`fixed inset-0 z-30 bg-slate-900/35 transition-opacity duration-300 ease-in-out ${
-          isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-        }`}
-        type="button"
-      />
+    <aside
+      aria-label="Menu lateral"
+      onMouseEnter={onHoverStart}
+      onMouseLeave={onHoverEnd}
+      className={`fixed left-0 top-0 z-40 h-full w-72 transform border-r border-slate-200 bg-white/95 pt-20 shadow-xl backdrop-blur transition-transform duration-300 ease-in-out ${
+        isOpen ? "translate-x-20" : "-translate-x-full"
+      }`}
+    >
+      <nav className="h-full overflow-y-auto px-6 pb-6">
+        <ul className="space-y-5">
+          {drawerMenuSections.map((section) => {
+            const sectionActive =
+              isActivePath(pathname, section.href) ||
+              section.items.some((item) => isActivePath(pathname, item.href));
 
-      <aside
-        aria-label="Menu lateral"
-        className={`fixed left-0 top-0 z-40 h-full w-72 transform border-r border-slate-200 bg-white/95 pt-20 shadow-xl backdrop-blur transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <nav className="h-full overflow-y-auto px-6 pb-6">
-          <ul className="space-y-5">
-            {drawerMenuSections.map((section) => {
-              const sectionActive =
-                isActivePath(pathname, section.href) ||
-                section.items.some((item) => isActivePath(pathname, item.href));
+            return (
+              <li key={section.title}>
+                <div className="mb-2">
+                  {section.href ? (
+                    <Link
+                      href={section.href}
+                      onClick={onClose}
+                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                        sectionActive
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-800 hover:bg-slate-100"
+                      }`}
+                    >
+                      <SectionIcon icon={section.icon} />
+                      <span>{section.title}</span>
+                    </Link>
+                  ) : (
+                    <h2 className="flex items-center gap-2 px-3 text-sm font-semibold text-slate-900">
+                      <SectionIcon icon={section.icon} />
+                      <span>{section.title}</span>
+                    </h2>
+                  )}
 
-              return (
-                <li key={section.title}>
-                  <div className="mb-2">
-                    {section.href ? (
-                      <Link
-                        href={section.href}
-                        onClick={onClose}
-                        className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                          sectionActive
-                            ? "bg-slate-900 text-white"
-                            : "text-slate-800 hover:bg-slate-100"
-                        }`}
-                      >
-                        <SectionIcon icon={section.icon} />
-                        <span>{section.title}</span>
-                      </Link>
-                    ) : (
-                      <h2 className="flex items-center gap-2 px-3 text-sm font-semibold text-slate-900">
-                        <SectionIcon icon={section.icon} />
-                        <span>{section.title}</span>
-                      </h2>
-                    )}
+                  <p className="px-3 pt-1 text-xs text-slate-500">{section.description}</p>
+                </div>
 
-                    <p className="px-3 pt-1 text-xs text-slate-500">{section.description}</p>
-                  </div>
+                <ul className="space-y-1 ml-4">
+                  {section.items.map((item) => {
+                    const activeItem = isActivePath(pathname, item.href);
 
-                  <ul className="space-y-1 ml-4">
-                    {section.items.map((item) => {
-                      const activeItem = isActivePath(pathname, item.href);
-
-                      return (
-                        <li key={item.href}>
-                          <Link
-                            href={item.href}
-                            onClick={onClose}
-                            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
-                              activeItem
-                                ? "bg-slate-100 font-medium text-slate-900"
-                                : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                            }`}
-                          >
-                            {item.icon && <ItemIcon icon={item.icon} />}
-                            <span>{item.title}</span>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      </aside>
-    </>
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          onClick={onClose}
+                          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
+                            activeItem
+                              ? "bg-slate-100 font-medium text-slate-900"
+                              : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                          }`}
+                        >
+                          {item.icon && <ItemIcon icon={item.icon} />}
+                          <span>{item.title}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </aside>
   );
 }
